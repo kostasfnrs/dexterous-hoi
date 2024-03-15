@@ -1,8 +1,8 @@
 This code has been largely adapted from the HOI-Diff repo. 
 
 Steps:
-1. Get the body models for SMPL and DMPL
-2. Download BEHAVE data as per link and put it into ./data
+1. Get the body models for SMPL and DMPL and put them into ./body_models/smplh and ./body_models/dmpls
+2. Download BEHAVE data as per link and put it into ./data/raw_behave
 3. Run all cells in the raw_pose_processing.ipynb
 4. Run motion_representation.py
 5. Run cal_mean_variance.py
