@@ -1,0 +1,4 @@
+data_preprocessing/humanml3d/data/
+data_preprocessing/humanml3d/body_models/
+
+*.pyc
