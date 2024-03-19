@@ -1,6 +1,7 @@
 data_preprocessing/humanml3d/data/
 data_preprocessing/humanml3d/body_models/
 data_preprocessing/grab_preprocessing/body_models/
+data_preprocessing/grab_preprocessing/data/
 
 *.pyc
 *.DS_Store
