@@ -19,4 +19,7 @@ pip install numpy==1.23.1 ipykernel skelvis trimesh matplotlib pyrender smplx
 conda install numpy=1.23.1 pytorch==1.7.1 torchvision==0.8.2 torchaudio==0.7.2 cudatoolkit=11.0 -c pytorch
 conda install scipy pandas tqdm
 
+cd ./data_preprocessing/grab_preprocessing/manopth
+pip install .
+
 ```

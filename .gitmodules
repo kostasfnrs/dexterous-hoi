@@ -1,0 +1,3 @@
+[submodule "common/manopth"]
+	path = common/manopth
+	url = https://github.com/hassony2/manopth
