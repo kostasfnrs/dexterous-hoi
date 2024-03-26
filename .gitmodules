@@ -1,3 +1,6 @@
 [submodule "common/manopth"]
 	path = common/manopth
 	url = https://github.com/hassony2/manopth
+[submodule "HOI-Diff"]
+	path = HOI-Diff
+	url = https://github.com/neu-vi/HOI-Diff.git

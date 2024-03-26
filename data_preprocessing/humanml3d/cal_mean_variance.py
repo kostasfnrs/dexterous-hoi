@@ -29,17 +29,23 @@ def mean_variance(data_dir, save_dir, joints_num):
     Std[0:1] = Std[0:1].mean() / 1.0
     Std[1:3] = Std[1:3].mean() / 1.0
     Std[3:4] = Std[3:4].mean() / 1.0
-    Std[4: 4+(joints_num - 1) * 3] = Std[4: 4+(joints_num - 1) * 3].mean() / 1.0
-    Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9] = Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9].mean() / 1.0
-    Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3] = Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3].mean() / 1.0
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 +4 ] = Std[4 + (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 + 4].mean() / 1.0
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 +4 : 4 + (joints_num - 1) * 9 + joints_num * 3 + 7] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 +4 :4 + (joints_num - 1) * 9 + joints_num * 3 +7 ].mean() / 1.0
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 +7 : ] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 +7 : ].mean() / 1.0
+    Std[4: 4+(joints_num - 1) * 3] = Std[4: 4 +
+                                         (joints_num - 1) * 3].mean() / 1.0
+    Std[4+(joints_num - 1) * 3: 4+(joints_num - 1) * 9] = Std[4 +
+                                                              (joints_num - 1) * 3: 4+(joints_num - 1) * 9].mean() / 1.0
+    Std[4+(joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3] = Std[4 +
+                                                                             (joints_num - 1) * 9: 4+(joints_num - 1) * 9 + joints_num*3].mean() / 1.0
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 + 4] = Std[4 +
+                                                                                                        (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 + 4].mean() / 1.0
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 4: 4 + (joints_num - 1) * 9 + joints_num * 3 + 7] = Std[4 +
+                                                                                                            (joints_num - 1) * 9 + joints_num * 3 + 4:4 + (joints_num - 1) * 9 + joints_num * 3 + 7].mean() / 1.0
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:] = Std[4 +
+                                                              (joints_num - 1) * 9 + joints_num * 3 + 7:].mean() / 1.0
     assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 == Std.shape[-1]
 
 #     np.save(pjoin(save_dir, 'Mean.npy'), Mean)
 #     np.save(pjoin(save_dir, 'Std.npy'), Std)
-    
+
     np.save(pjoin(save_dir, 'Mean_local.npy'), Mean)
     np.save(pjoin(save_dir, 'Std_local.npy'), Std)
 
@@ -47,9 +53,11 @@ def mean_variance(data_dir, save_dir, joints_num):
 
 
 if __name__ == '__main__':
-#     data_dir = './HumanML3D/new_joint_vecs/'
-    data_dir = './data/new_joint_vecs_local/'
-    save_dir = './data/'
+    #     data_dir = './HumanML3D/new_joint_vecs/'
+    # data_dir = './data/new_joint_vecs_local/'
+    data_dir = '/media/erik/DATA/new_joint_vecs_local/'
+    save_dir = '/media/erik/DATA/calibration/'
+    os.makedirs(save_dir, exist_ok=True)
     mean, std = mean_variance(data_dir, save_dir, 22)
 #     print(mean)
 #     print(Std)
