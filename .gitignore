@@ -3,6 +3,23 @@ data_preprocessing/humanml3d/body_models/
 data_preprocessing/grab_preprocessing/body_models/
 data_preprocessing/grab_preprocessing/data/
 
+
 *.pyc
 *.DS_Store
 *.zip
+
+__pycache__/
+__MACOSX/
+HOI-Diff/dataset/behave_t2m/
+glove/
+kit/
+t2m/
+save/
+body_models/
+
+*.pyc
+*.pt
+.DS_Store
+._.DS_Store
+*.mp4
+*.log
