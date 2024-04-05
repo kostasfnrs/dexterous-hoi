@@ -15,7 +15,8 @@ glove/
 kit/
 t2m/
 save/
-body_models/
+HOI-Diff/body_models/smpl/SMPL_NEUTRAL.pkl
+
 
 *.pyc
 *.pt
