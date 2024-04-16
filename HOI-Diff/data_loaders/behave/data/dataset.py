@@ -304,9 +304,11 @@ class Text2MotionDatasetV2(data.Dataset):
                 motion = np.load(pjoin(opt.motion_dir, name + '.npy'))
                 
                 # load obj points----------------
-                obj_name = name.split('_')[2]
+                # NOTE: this is so hacky and hardcoded, needs to be changed for every dataset
+                obj_name = name.split('_')[1]
                 obj_path = pjoin(opt.data_root, 'object_mesh')
-                mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+                # mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+                mesh_path = os.path.join(obj_path, obj_name, f'{obj_name}.ply')
                 temp_simp = trimesh.load(mesh_path)
 
                 obj_points = np.array(temp_simp.vertices)
@@ -338,6 +340,7 @@ class Text2MotionDatasetV2(data.Dataset):
 
                 
                 if (len(motion)) < min_motion_len or (len(motion) >= 200):
+                    print('skipping %s due to wrong motion length'%name)
                     continue
                 text_data = []
                 flag = False
@@ -391,11 +394,20 @@ class Text2MotionDatasetV2(data.Dataset):
 
                     new_name_list.append(name)
                     length_list.append(len(motion))
-            except Exception as err:
-                # print(err.__class__.__name__) 
-                # print(err) 
+            except FileNotFoundError as err:
+                print(err.__class__.__name__) 
+                print(err) 
+                print(f"Error in {name}, possibly did not find text annotation?")
+                pass
+            except IndexError as err:
+                print(err.__class__.__name__) 
+                print(err) 
+                print(f"Error in {name}, error in text annotation?")
                 pass
 
+        
+        print(f'Length of new name list: {len(new_name_list)}')
+        print(f'Length of length list: {len(length_list)}')
         name_list, length_list = zip(*sorted(zip(new_name_list, length_list), key=lambda x: x[1]))
 
         self.mean = mean
@@ -475,7 +487,16 @@ class Text2MotionDatasetV2(data.Dataset):
             "Z Normalization"
             motion = np.copy(motion)
             if len(self.mean) == 269:
-                motion[:,:269] = (motion[:, :269] - self.mean[:269]) / self.std[:269]
+                np.seterr(all='raise')
+                # print(f'Length of batch: {motion.shape[0]}')
+                # print(f'Std. deviation: {np.mean(self.std)}')
+                try:
+                    motion[:,:269] = (motion[:, :269] - self.mean[:269]) / self.std[:269]
+                except FloatingPointError as err:
+                    print(err.__class__.__name__) 
+                    print(err) 
+                    print(f"Error in {seq_name}, possibly due to zero division?")
+                    print(f'Std. deviation: {np.where(self.std==0)}')
             else:
                 #  for evaluation of ground truth
                 motion[..., :263] = (motion[..., :263] - self.mean[:263]) / self.std[:263]

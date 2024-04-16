@@ -53,7 +53,9 @@ def process_grab(corpus, out_path):
         caption = desc_all.iloc[i]['caption']
         start = 0.0
         end = 0.0
-        name = desc_all.iloc[i]['seq_name']
+        name = desc_all.iloc[i]['seq_name']    
+        # change naming  
+        name = name.replace('pick_all', 'lift')
         word_list, pose_list = process_text(caption)
         tokens = ' '.join(['%s/%s' % (word_list[i], pose_list[i]) for i in range(len(word_list))])
         with cs.open(pjoin(out_path, name + '.txt'), 'a+') as f:

@@ -78,14 +78,30 @@ def process_file(positions, positions_obj, feet_thre):
     # '''Uniform Skeleton'''
     # positions, scale_rt = uniform_skeleton(positions, tgt_offsets)
 
+    # mirror z and y axis
+    positions[:, :, 2] *= -1
+    positions[:, :, 1] *= -1
+    # also mirror the rotations of the object
+    positions_obj[:, [2, 4]] *= -1
+    positions_obj[:, [1, 3]] *= -1
+
+    # swap y and z
+    positions = positions[:, :, [0, 2, 1]]
+    positions_obj = positions_obj[:, [0, 2, 1, 3, 5, 1]]
+
+    # swap x and z
+    positions = positions[:, :, [2, 1, 0]]
+    positions_obj = positions_obj[:, [2, 1, 0, 5, 4, 3]]
+
+    # swap 
+
     '''Put on Floor'''
     floor_height = positions.min(axis=0).min(axis=0)[1]
     positions[:, :, 1] -= floor_height
     # --------handle obj rot + trans
     positions_obj[:, 4] -= floor_height
-    #     print(floor_height)
 
-    #     plot_3d_motion("./positions_1.mp4", kinematic_chain, positions, 'title', fps=20)
+    # plot_3d_motion("./positions_1.mp4", kinematic_chain, positions, 'title', fps=20)
 
     '''XZ at origin'''
     root_pos_init = positions[0]
@@ -142,7 +158,9 @@ def process_file(positions, positions_obj, feet_thre):
 
     def foot_detect(positions, thres):
         velfactor, heightfactor = np.array(
-            [thres, thres]), np.array([3.0, 2.0])
+            [thres, thres]), np.array([0.05, 0.025])
+        # velfactor, heightfactor = np.array(
+            # [thres, thres]), np.array([3.0, 2.0])
         feet_l_x = (positions[1:, fid_l, 0] - positions[:-1, fid_l, 0]) ** 2
         feet_l_y = (positions[1:, fid_l, 1] - positions[:-1, fid_l, 1]) ** 2
         feet_l_z = (positions[1:, fid_l, 2] - positions[:-1, fid_l, 2]) ** 2
@@ -343,19 +361,26 @@ if __name__ == "__main__":
     joints_num = 22
     # ds_num = 8
 
+    data_root = '/media/erik/DATA'
+    # stage_1_output = f'{data_root}/behave_processed/pose_data_behave'
+    # stage_2_output = f'{data_root}/behave_processed/joints_behave'
+    # save_dir1 = f'{data_root}/behave_processed/new_joints_local'
+    # save_dir2 = f'{data_root}/behave_processed/new_joint_vecs_local'
+
     # stage_1_output = './data/pose_data_behave'
     # stage_2_output = './data/joints_behave'
     # save_dir1 = './data/new_joints_local/'
     # save_dir2 = './data/new_joint_vecs_local/'
 
-    stage_1_output = '/media/erik/DATA/pose_data_grab'
-    stage_2_output = '/media/erik/DATA/joints_grab'
-
+    stage_1_output = f'{data_root}/grab/pose_data_grab'
+    stage_2_output = f'{data_root}/grab/joints_grab'
+    save_dir1 = f'{data_root}/grab/new_joints_local'
+    save_dir2 = f'{data_root}/grab/new_joint_vecs_local'
     data_dir = stage_2_output
     data_obj_dir = stage_1_output
 
-    save_dir1 = '/media/erik/DATA/new_joints_local/'
-    save_dir2 = '/media/erik/DATA/new_joint_vecs_local/'
+    # save_dir1 = '/media/erik/DATA/new_joints_local/'
+    # save_dir2 = '/media/erik/DATA/new_joint_vecs_local/'
 
     os.makedirs(save_dir1, exist_ok=True)
     os.makedirs(save_dir2, exist_ok=True)
