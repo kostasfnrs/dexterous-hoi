@@ -152,7 +152,7 @@ class TextOnlyDataset(data.Dataset):
         self.pointer = 0
         self.fixed_length = 196
         self.normal_dim = opt.dim_pose
-
+        
         data_dict = {}
         id_list = []
         with cs.open(split_file, 'r') as f:
@@ -169,9 +169,11 @@ class TextOnlyDataset(data.Dataset):
             try:
 
                 # load obj points----------------
-                obj_name = name.split('_')[2]
+                # obj_name = name.split('_')[2]
+                obj_name = name.split('_')[1]
                 obj_path = pjoin(opt.data_root, 'object_mesh')
-                mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+                # mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+                mesh_path = os.path.join(obj_path, obj_name, f'{obj_name}.ply')
 
                 temp_simp = trimesh.load(mesh_path)
                 obj_points = np.array(temp_simp.vertices).astype(np.float32)
@@ -239,9 +241,20 @@ class TextOnlyDataset(data.Dataset):
                                         'obj_normals':obj_normals
                                         }
                     new_name_list.append(name)
+            except FileNotFoundError as err:
+                print(err.__class__.__name__) 
+                print(err) 
+                print(f"Error in {name}, possibly did not find text annotation?")
+                pass
+            except IndexError as err:
+                print(err.__class__.__name__) 
+                print(err) 
+                print(f"Error in {name}, error in text annotation?")
+                pass
             except Exception as err:
-                # print(err.__class__.__name__) # 
-                # print(err) 
+                print(err.__class__.__name__) 
+                print(err) 
+                print(f"Error in {name}")
                 pass
 
         self.length_arr = np.array(length_list)

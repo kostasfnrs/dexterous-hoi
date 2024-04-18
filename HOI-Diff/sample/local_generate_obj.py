@@ -36,7 +36,7 @@ def main():
     niter = os.path.basename(args.model_path).replace('model', '').replace('.pt', '')
     max_frames = 196 if args.dataset in ['kit', 'humanml', 'behave'] else 120
     # fps = 12.5 if args.dataset == 'kit' else 20
-    fps = 10
+    fps = 20
     n_frames = min(max_frames, int(args.motion_length*fps))
     is_using_data = not any([args.input_text, args.text_prompt, args.action_file, args.action_name])
     dist_util.setup_dist(args.device)
@@ -268,12 +268,14 @@ def main():
             vertices = all_obj_points[rep_i*args.batch_size + sample_i]
 
             if is_using_data:
-                obj_name = all_obj_name[rep_i*args.batch_size + sample_i].split('_')[2]
+                obj_name = all_obj_name[rep_i*args.batch_size + sample_i].split('_')[1]
+                # obj_name = all_obj_name[rep_i*args.batch_size + sample_i].split('_')[2]
             else:
                 obj_name = all_obj_name[rep_i*args.batch_size + sample_i]
 
 
-            mesh_path = os.path.join("./dataset/behave_t2m/object_mesh", simplified_mesh[obj_name])
+            # mesh_path = os.path.join("./dataset/behave_t2m/object_mesh", simplified_mesh[obj_name])
+            mesh_path = os.path.join("./dataset/behave_t2m/object_mesh", obj_name, obj_name + '.ply')
             temp_simp = trimesh.load(mesh_path)
             all_vertices = temp_simp.vertices
             # center the meshes
