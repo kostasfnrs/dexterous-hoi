@@ -78,20 +78,20 @@ def process_file(positions, positions_obj, feet_thre):
     # '''Uniform Skeleton'''
     # positions, scale_rt = uniform_skeleton(positions, tgt_offsets)
 
-    # mirror z and y axis
-    positions[:, :, 2] *= -1
-    positions[:, :, 1] *= -1
-    # also mirror the rotations of the object
-    positions_obj[:, [2, 4]] *= -1
-    positions_obj[:, [1, 3]] *= -1
+    # # mirror z and y axis
+    # positions[:, :, 2] *= -1
+    # positions[:, :, 1] *= -1
+    # # also mirror the rotations of the object
+    # # positions_obj[:, [2, 4]] *= -1
+    # # positions_obj[:, [1, 3]] *= -1
 
-    # swap y and z
-    positions = positions[:, :, [0, 2, 1]]
-    positions_obj = positions_obj[:, [0, 2, 1, 3, 5, 1]]
+    # # swap y and z
+    # positions = positions[:, :, [0, 2, 1]]
+    # positions_obj = positions_obj[:, [0, 2, 1, 3, 5, 1]]
 
-    # swap x and z
-    positions = positions[:, :, [2, 1, 0]]
-    positions_obj = positions_obj[:, [2, 1, 0, 5, 4, 3]]
+    # # swap x and z
+    # positions = positions[:, :, [2, 1, 0]]
+    # positions_obj = positions_obj[:, [2, 1, 0, 5, 4, 3]]
 
     # swap 
 
@@ -405,70 +405,69 @@ if __name__ == "__main__":
         source_data_obj = np.load(os.path.join(
             data_obj_dir, source_file[:-4], 'object_fit_all.npy'))
         source_data = source_data.reshape(len(source_data), -1, 3)
-        try:
-            # compute absoluate root information instead of relative, ignore rec_ric_data
-            data, ground_positions, positions, l_velocity, data_obj = process_file(
-                source_data, source_data_obj, 0.002)
+        # try:
+        # compute absoluate root information instead of relative, ignore rec_ric_data
+        data, ground_positions, positions, l_velocity, data_obj = process_file(
+            source_data, source_data_obj, 0.002)
 
-            rec_ric_data = recover_from_ric(torch.from_numpy(
-                data).unsqueeze(0).float(), joints_num)
-            seq_len = data.shape[0]
-            # 263 human + 6 obj
-            # Date06_Sub07_backpack_back.npy he array at index 0 has size 1440 and the array at index 1 has size 1411
+        rec_ric_data = recover_from_ric(torch.from_numpy(
+            data).unsqueeze(0).float(), joints_num)
+        seq_len = data.shape[0]
+        # 263 human + 6 obj
+        # Date06_Sub07_backpack_back.npy he array at index 0 has size 1440 and the array at index 1 has size 1411
 
-            data = np.concatenate([data, data_obj], axis=-1)
+        data = np.concatenate([data, data_obj], axis=-1)
 
-            # # load obj points----------------
-            # obj_name = source_file.split('_')[2]
-            # obj_path = '/work/vig/Datasets/BEHAVE-dataset/objects'
-            # mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
-            # temp_simp = trimesh.load(mesh_path)
-            # obj_points = temp_simp.vertices
+        # # load obj points----------------
+        # obj_name = source_file.split('_')[2]
+        # obj_path = '/work/vig/Datasets/BEHAVE-dataset/objects'
+        # mesh_path = os.path.join(obj_path, simplified_mesh[obj_name])
+        # temp_simp = trimesh.load(mesh_path)
+        # obj_points = temp_simp.vertices
 
-            # # # center the meshes
-            # center = np.mean(obj_points, 0)
-            # obj_points -= center
-            # obj_points = obj_points.astype(np.float32)
+        # # # center the meshes
+        # center = np.mean(obj_points, 0)
+        # obj_points -= center
+        # obj_points = obj_points.astype(np.float32)
 
-            # # Calculate the simple moving average
-            # motion_obj = data_obj
+        # # Calculate the simple moving average
+        # motion_obj = data_obj
 
-            # angle, trans = motion_obj[:, :3].transpose(1, 0), motion_obj[:, 3:].transpose(1, 0)
-            # rot = Rotation.from_rotvec(angle.transpose(1, 0)).as_matrix()
-            # obj_points = np.matmul(obj_points[np.newaxis], rot.transpose(0, 2, 1)[:, np.newaxis])[:, 0] + trans.transpose(1, 0)[:, np.newaxis]
-            # # obj_points = obj_points.transpose(1, 2, 0)
+        # angle, trans = motion_obj[:, :3].transpose(1, 0), motion_obj[:, 3:].transpose(1, 0)
+        # rot = Rotation.from_rotvec(angle.transpose(1, 0)).as_matrix()
+        # obj_points = np.matmul(obj_points[np.newaxis], rot.transpose(0, 2, 1)[:, np.newaxis])[:, 0] + trans.transpose(1, 0)[:, np.newaxis]
+        # # obj_points = obj_points.transpose(1, 2, 0)
 
-            # text_data = []
-            # flag = False
-            # with cs.open(pjoin('/work/vig/xiaogangp/codes/guided-motion-diffusion/dataset/Behave_global/texts', source_file[:-4] + '.txt')) as f:
-            #     for line in f.readlines():
-            #         text_dict = {}
-            #         line_split = line.strip().split('#')
-            #         caption = line_split[0]
-            #         tokens = line_split[1].split(' ')
-            #         # f_tag = float(line_split[2])
-            #         # to_tag = float(line_split[3])
-            #         # f_tag = 0.0 if np.isnan(f_tag) else f_tag
-            #         # to_tag = 0.0 if np.isnan(to_tag) else to_tag
-            #         # TODO: hardcode
-            #         f_tag = to_tag = 0.0
+        # text_data = []
+        # flag = False
+        # with cs.open(pjoin('/work/vig/xiaogangp/codes/guided-motion-diffusion/dataset/Behave_global/texts', source_file[:-4] + '.txt')) as f:
+        #     for line in f.readlines():
+        #         text_dict = {}
+        #         line_split = line.strip().split('#')
+        #         caption = line_split[0]
+        #         tokens = line_split[1].split(' ')
+        #         # f_tag = float(line_split[2])
+        #         # to_tag = float(line_split[3])
+        #         # f_tag = 0.0 if np.isnan(f_tag) else f_tag
+        #         # to_tag = 0.0 if np.isnan(to_tag) else to_tag
+        #         # TODO: hardcode
+        #         f_tag = to_tag = 0.0
 
-            #         text_dict['caption'] = caption
-            #         text_dict['tokens'] = tokens
-            #         if f_tag == 0.0 and to_tag == 0.0:
-            #             flag = True
-            #             text_data.append(text_dict)
+        #         text_dict['caption'] = caption
+        #         text_dict['tokens'] = tokens
+        #         if f_tag == 0.0 and to_tag == 0.0:
+        #             flag = True
+        #             text_data.append(text_dict)
 
-            # data = np.concatenate([rec_ric_data.reshape(-1, 22, 3), obj_points], 1)
-            # plot('./check_videos/{}.mp4'.format(source_file[:-4]), data, None, None, title=str(text_data[0]['caption']), fps=20)
+        # data = np.concatenate([rec_ric_data.reshape(-1, 22, 3), obj_points], 1)
+        # plot('./check_videos/{}.mp4'.format(source_file[:-4]), data, None, None, title=str(text_data[0]['caption']), fps=20)
 
-            np.save(pjoin(save_dir1, source_file), rec_ric_data)
-            np.save(pjoin(save_dir2, source_file), data)
-            frame_num += data.shape[0]
+        np.save(pjoin(save_dir1, source_file), rec_ric_data)
+        np.save(pjoin(save_dir2, source_file), data)
+        frame_num += data.shape[0]
 
-        except Exception as e:
-            print(source_file)
-            print(e)
+        # except Exception as e:
+        #     print(f'Error in {source_file}: {e}')
 #         print(source_file)
 #         break
 #         import pdb; pdb.set_trace()
