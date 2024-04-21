@@ -4,8 +4,10 @@ import shutil
 import sys
 from pathlib import Path
 
+sys.path.insert(0, os.path.expanduser("~/.local/lib/python3.9/site-packages"))
+
 # import natsort
-from natsort import natsorted
+# from natsort import natsorted
 try:
     import bpy
 
@@ -45,26 +47,26 @@ def render_cli() -> None:
     # create logger
     # logger = create_logger(cfg, phase='render')
 
-
     if cfg.RENDER.INPUT_MODE.lower() == "npy":
         output_dir = Path(os.path.dirname(cfg.RENDER.NPY))
         paths = [cfg.RENDER.NPY]
-        # print("xxx")
+        print("xxx")
         # print("begin to render for{paths[0]}")
     elif cfg.RENDER.INPUT_MODE.lower() == "dir":
+        print("yyy")
         output_dir = Path(cfg.RENDER.DIR)
         paths = []
         # file_list = os.listdir(cfg.RENDER.DIR)
         # random begin for parallel
-        file_list = natsorted(os.listdir(cfg.RENDER.DIR))
+        file_list = sorted(os.listdir(cfg.RENDER.DIR))
         begin_id = random.randrange(0, len(file_list))
-        file_list = file_list[begin_id:]+file_list[:begin_id]
+        file_list = file_list[begin_id:] + file_list[:begin_id]
 
         # render mesh npy first
         for item in file_list:
             if item.endswith("smpl_params.npy"):
                 paths.append(os.path.join(cfg.RENDER.DIR, item))
-                
+                print(f"Appended {os.path.join(cfg.RENDER.DIR, item)}")
 
         # # then render other npy
         # for item in file_list:
@@ -80,11 +82,15 @@ def render_cli() -> None:
     from mld.render.blender import render
     from mld.render.blender.tools import mesh_detect
     from mld.render.video import Video
+
     init = True
     for path in paths:
+        print(path)
         # check existed mp4 or under rendering
         if cfg.RENDER.MODE == "video":
-            if os.path.exists(path.replace(".npy", ".mp4")) or os.path.exists(path.replace(".npy", "_frames")):
+            if os.path.exists(path.replace(".npy", ".mp4")) or os.path.exists(
+                path.replace(".npy", "_frames")
+            ):
                 print(f"npy is rendered or under rendering {path}")
                 continue
         else:
@@ -95,29 +101,28 @@ def render_cli() -> None:
 
         if cfg.RENDER.MODE == "video":
             frames_folder = os.path.join(
-                output_dir, path.replace(".npy", "_frames").split('/')[-1])
+                output_dir, path.replace(".npy", "_frames").split("/")[-1]
+            )
             os.makedirs(frames_folder, exist_ok=True)
         else:
             frames_folder = os.path.join(
-                output_dir, path.replace(".npy", ".png").split('/')[-1])
+                output_dir, path.replace(".npy", ".png").split("/")[-1]
+            )
 
         try:
-
             h_data_path = path
             o_data_path = path.replace("smpl_params.npy", "obj_params.npy")
-            
-            data = np.load(h_data_path, allow_pickle=True).item()['vertices']
-            obj_data = np.load(o_data_path, allow_pickle=True).item()['vertices']
+
+            data = np.load(h_data_path, allow_pickle=True).item()["vertices"]
+            obj_data = np.load(o_data_path, allow_pickle=True).item()["vertices"]
             data = data.view(np.ndarray).transpose(2, 0, 1)
             obj_data = obj_data.view(np.ndarray).transpose(2, 0, 1)
 
-
-            
             if cfg.RENDER.JOINT_TYPE.lower() == "humanml3d":
                 is_mesh = mesh_detect(data)
                 if not is_mesh:
                     data = data * smplh_to_mmm_scaling_factor
-                    obj_data = obj_data 
+                    obj_data = obj_data
         except FileNotFoundError:
             print(f"{path} not found")
             continue
@@ -170,6 +175,3 @@ def render_cli() -> None:
 
 if __name__ == "__main__":
     render_cli()
-
-
-

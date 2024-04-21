@@ -2,13 +2,14 @@ import importlib
 from argparse import ArgumentParser
 from omegaconf import OmegaConf
 import os
+import sys
 
 
 def get_module_config(cfg_model, path="modules"):
-    files = os.listdir(f'./configs/{path}/')
+    files = os.listdir(f"./configs/{path}/")
     for file in files:
-        if file.endswith('.yaml'):
-            with open(f'./configs/{path}/' + file, 'r') as f:
+        if file.endswith(".yaml"):
+            with open(f"./configs/{path}/" + file, "r") as f:
                 cfg_model.merge_with(OmegaConf.load(f))
     return cfg_model
 
@@ -23,7 +24,7 @@ def get_obj_from_str(string, reload=False):
 
 def instantiate_from_config(config):
     if not "target" in config:
-        if config == '__is_first_stage__':
+        if config == "__is_first_stage__":
             return None
         elif config == "__is_unconditional__":
             return None
@@ -50,29 +51,28 @@ def parse_args(phase="train"):
             default="./configs/assets.yaml",
             help="config file for asset paths",
         )
-        group.add_argument("--batch_size",
-                           type=int,
-                           required=False,
-                           help="training batch size")
-        group.add_argument("--device",
-                           type=int,
-                           nargs="+",
-                           required=False,
-                           help="training device")
-        group.add_argument("--nodebug",
-                           action="store_true",
-                           required=False,
-                           help="debug or not")
-        group.add_argument("--dir",
-                           type=str,
-                           required=False,
-                           help="evaluate existing npys")
+        group.add_argument(
+            "--batch_size", type=int, required=False, help="training batch size"
+        )
+        group.add_argument(
+            "--device", type=int, nargs="+", required=False, help="training device"
+        )
+        group.add_argument(
+            "--nodebug", action="store_true", required=False, help="debug or not"
+        )
+        group.add_argument(
+            "--dir",
+            type=str,
+            required=False,
+            default="/home/erik/ethz/digital-humans/dex-hoi/HOI-Diff/save/grab_30fps_noflipsatall_enc_512/sample_00_rep00_obj/",
+            help="evaluate existing npys",
+        )
 
     if phase == "demo":
         # group.add_argument("--motion_transfer", action='store_true', help="Motion Distribution Transfer")
-        group.add_argument("--render",
-                           action="store_true",
-                           help="Render visulizaed figures")
+        group.add_argument(
+            "--render", action="store_true", help="Render visulizaed figures"
+        )
         group.add_argument("--render_mode", type=str, help="video or sequence")
         group.add_argument(
             "--frame_rate",
@@ -127,49 +127,48 @@ def parse_args(phase="train"):
             help="config file for asset paths",
         )
         # group.add_argument("--motion_transfer", action='store_true', help="Motion Distribution Transfer")
-        group.add_argument("--npy",
-                           type=str,
-                           required=False,
-                           default=None,
-                           help="npy motion files")
-        group.add_argument("--dir",
-                           type=str,
-                           required=False,
-                           default=None,
-                           help="npy motion folder")
+        group.add_argument(
+            "--npy", type=str, required=False, default=None, help="npy motion files"
+        )
+        group.add_argument(
+            "--dir",
+            type=str,
+            required=False,
+            default="/home/erik/ethz/digital-humans/dex-hoi/HOI-Diff/save/grab_30fps_noflipsatall_enc_512/samples_grab_30fps_noflipsatall_enc_512_000020000_seed10/sample00_rep00_obj/",
+            help="npy motion folder",
+        )
         group.add_argument(
             "--mode",
             type=str,
             required=False,
-            default="sequence",
+            default="video",
             help="render target: video, sequence, frame",
         )
         group.add_argument(
             "--joint_type",
             type=str,
             required=False,
-            default=None,
+            default="HumanML3D",
             help="mmm or vertices for skeleton",
         )
 
     # remove None params, and create a dictionnary
     params = parser.parse_args()
-    
 
     # params = {key: val for key, val in vars(opt).items() if val is not None}
 
     # update config from files
-    cfg_base = OmegaConf.load('./configs/base.yaml')
+    cfg_base = OmegaConf.load("./configs/base.yaml")
     cfg_exp = OmegaConf.merge(cfg_base, OmegaConf.load(params.cfg))
     # print(f"==========cfg {OmegaConf.load(params.cfg)}")
     # cfg_model = get_module_config(cfg_exp.model, cfg_exp.model.target)
     cfg_assets = OmegaConf.load(params.cfg_assets)
     cfg = OmegaConf.merge(cfg_exp, cfg_assets)
 
-
     if phase in ["train", "test"]:
-        cfg.TRAIN.BATCH_SIZE = (params.batch_size
-                                if params.batch_size else cfg.TRAIN.BATCH_SIZE)
+        cfg.TRAIN.BATCH_SIZE = (
+            params.batch_size if params.batch_size else cfg.TRAIN.BATCH_SIZE
+        )
         cfg.DEVICE = params.device if params.device else cfg.DEVICE
         cfg.DEBUG = not params.nodebug if params.nodebug is not None else cfg.DEBUG
 
@@ -192,7 +191,6 @@ def parse_args(phase="train"):
         cfg.DEMO.OUTALL = params.allinone
 
     if phase == "render":
-        
         if params.npy:
             cfg.RENDER.NPY = params.npy
             cfg.RENDER.INPUT_MODE = "npy"
@@ -200,7 +198,7 @@ def parse_args(phase="train"):
             cfg.RENDER.DIR = params.dir
             cfg.RENDER.INPUT_MODE = "dir"
         cfg.RENDER.JOINT_TYPE = params.joint_type
-        cfg.RENDER.MODE = params.mode
+        cfg.RENDER.MODE = "video"
 
     # debug mode
     if cfg.DEBUG:
