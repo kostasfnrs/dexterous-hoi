@@ -58,6 +58,8 @@ def render_cli() -> None:
         paths = []
         # file_list = os.listdir(cfg.RENDER.DIR)
         # random begin for parallel
+        print("Rendering from:")
+        print(cfg.RENDER.DIR)
         file_list = sorted(os.listdir(cfg.RENDER.DIR))
         begin_id = random.randrange(0, len(file_list))
         file_list = file_list[begin_id:] + file_list[:begin_id]

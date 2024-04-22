@@ -77,3 +77,43 @@ otion_length 10 --multi_backbone_split 4 --skip_first_stage
 ```
 
 
+### HOI-Diff visualization
+
+First, install Blender 2.93:
+
+```bash 
+sudo snap install blender --channel=2.93lts/stable --classic\
+```
+
+Then, locate the Python installation of Blender:
+
+```bash 
+blender --background --python-expr "import sys; import os; print('\nThe path to the installation of python of blender can be:'); print('\n'.join(['- '+x.replace('/lib/python', '/bin/python') for x in sys.path if 'python' in (file:=os.path.split(x)[-1]) and not file.endswith('.zip')]))"
+export BLENDER_PY = <the path to Blender Python>
+```
+
+Then, install the following dependencies:
+
+```bash
+$BLENDER_PY -m pip install --user numpy matplotlib moviepy shortuuid 
+$BLENDER_PY -m pip install --user hydra-core --upgrade 
+$BLENDER_PY -m pip install --user hydra_colorlog --upgrade 
+$BLENDER_PY -m pip install -r HOI-Diff/blender_render/requirements.txt
+```
+
+Then, create the SMPL mesh from the skeletal joints, for example, using a command like this:
+
+```python 
+python -m visualize.render_mesh --input_path save/grab_30fps_noflipsatall_enc_512/samples_grab_30fps_noflipsatall_enc_512_000020000_see
+d10/sample01_rep00.mp4
+```
+The files from this will show up in the base directory that you provided. Copy them into the newly created subdirectory `<sampleXX_repXX_obj/`.
+
+Note that the video file you refer to has to have the underscore with `<repXX>`.  
+
+Then, begin rendering with:
+
+```bash
+cd blender_render
+blender --background --python render.py -- --dir /home/erik/ethz/digital-humans/dex-hoi/HOI-Diff/save/grab_30fps_noflipsatall_enc_512/samples_grab_30fps_noflipsatall_enc_512_000020000_seed10/sample01_rep00_obj/
+```

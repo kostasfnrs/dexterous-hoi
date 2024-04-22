@@ -134,7 +134,7 @@ def parse_args(phase="train"):
             "--dir",
             type=str,
             required=False,
-            default="/home/erik/ethz/digital-humans/dex-hoi/HOI-Diff/save/grab_30fps_noflipsatall_enc_512/samples_grab_30fps_noflipsatall_enc_512_000020000_seed10/sample00_rep00_obj/",
+            # default="/home/erik/ethz/digital-humans/dex-hoi/HOI-Diff/save/grab_30fps_noflipsatall_enc_512/samples_grab_30fps_noflipsatall_enc_512_000020000_seed10/sample00_rep00_obj/",
             help="npy motion folder",
         )
         group.add_argument(
