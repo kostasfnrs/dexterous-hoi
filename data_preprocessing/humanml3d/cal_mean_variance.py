@@ -27,6 +27,8 @@ def mean_variance(data_dir, save_dir, joints_num):
     Mean = data.mean(axis=0)
     Std = data.std(axis=0)
 
+    # NOTE: this is horrible, added some comments to make it a bit clearer
+
     # root rot velocity
     Std[0:1] = Std[0:1].mean() / 1.0
     
@@ -52,8 +54,13 @@ def mean_variance(data_dir, save_dir, joints_num):
     Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 4: 4 + (joints_num - 1) * 9 + joints_num * 3 + 7] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 4:4 + (joints_num - 1) * 9 + joints_num * 3 + 7].mean() / 1.0
     
     # final 3 dimensions for object velocity?
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:].mean() / 1.0
-    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 == Std.shape[-1]
+    # NOTE: updated with hands, so we take three for the velocity
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10].mean() / 1.0
+
+    # left hand, 24 dims
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34].mean() / 1.0
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 58] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 58].mean() / 1.0
+    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * 24 == Std.shape[-1]
 
 #     np.save(pjoin(save_dir, 'Mean.npy'), Mean)
 #     np.save(pjoin(save_dir, 'Std.npy'), Std)
