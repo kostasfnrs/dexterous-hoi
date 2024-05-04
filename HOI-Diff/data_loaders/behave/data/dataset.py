@@ -355,12 +355,15 @@ class Text2MotionDatasetV2(data.Dataset):
 
         data_dict = {}
         id_list = []
+
+
         with cs.open(split_file, "r") as f:
             for line in f.readlines():
                 id_list.append(line.strip())
 
         new_name_list = []
         length_list = []
+        print(f'Length of id_list: {len(id_list)}')
         for name in tqdm(id_list):
             try:
                 motion = np.load(pjoin(opt.motion_dir, name + ".npy"))
@@ -463,6 +466,11 @@ class Text2MotionDatasetV2(data.Dataset):
                 print(err.__class__.__name__)
                 print(err)
                 print(f"Error in {name}, error in text annotation?")
+                pass
+            except Exception as err:
+                print(err.__class__.__name__)
+                print(err)
+                print(f"Error in {name}")
                 pass
 
         print(f"Length of new name list: {len(new_name_list)}")
