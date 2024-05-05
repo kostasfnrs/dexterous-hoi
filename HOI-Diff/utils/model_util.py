@@ -99,8 +99,8 @@ def get_model_args(args, data):
     if args.dataset in ["behave", "omomo"]:
         data_rep = "hml_vec"
 
-        # add 2*24 for PCA mano pose
-        njoints = 269 + 2 * 24
+        # add 2*(24 + 6) for PCA mano pose and global rotation in 6d
+        njoints = 269 + 2 * 30
         nfeats = 1
 
     return {
@@ -169,4 +169,3 @@ def create_gaussian_diffusion(
             rescale_timesteps=rescale_timesteps,
         ),
     )
-

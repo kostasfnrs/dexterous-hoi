@@ -39,7 +39,7 @@ class HOIDiff(MDM):
     ):
         super(HOIDiff, self).__init__(
             modeltype,
-            njoints - (6 + 2 * 24),
+            njoints - (6 + 2 * 30),
             nfeats,
             num_actions,
             translation,
@@ -103,13 +103,13 @@ class HOIDiff(MDM):
             num_layers=2, latent_dim=self.latent_dim, input_feats=self.input_feats
         )
 
-        # we add 2*24 for both 24-dim PCA hand params
+        # we add 2*(24 + 6) for both 24-dim PCA hand params and 6-dim global rotation
         self.input_process_obj = InputProcess(
-            self.data_rep, 6 + 2 * 24, self.latent_dim
+            self.data_rep, 6 + 2 * 30, self.latent_dim
         )
 
         self.output_process_obj = OutputProcess(
-            self.data_rep, 6 + 2 * 24, self.latent_dim, 6 + 2 * 24, self.nfeats
+            self.data_rep, 6 + 2 * 30, self.latent_dim, 6 + 2 * 30, self.nfeats
         )
 
     def mask_cond_obj(self, cond, force_mask=False):

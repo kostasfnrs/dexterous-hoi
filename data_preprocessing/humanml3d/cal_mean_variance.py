@@ -59,8 +59,17 @@ def mean_variance(data_dir, save_dir, joints_num):
 
     # left hand, 24 dims
     Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34].mean() / 1.0
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 58] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 58].mean() / 1.0
-    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * 24 == Std.shape[-1]
+    
+    # left hand rot, 6 dims
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 40] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 40].mean() / 1.0
+
+    # right hand, 24 dims
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 40:4 + (joints_num - 1) * 9 + joints_num * 3 + 64] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 40:4 + (joints_num - 1) * 9 + joints_num * 3 + 64].mean() / 1.0
+
+    # right hand rot, 6 dims
+    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 64:4 + (joints_num - 1) * 9 + joints_num * 3 + 70] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 64:4 + (joints_num - 1) * 9 + joints_num * 3 + 70].mean() / 1.0
+
+    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * 24 + 2 * 6 == Std.shape[-1]
 
 #     np.save(pjoin(save_dir, 'Mean.npy'), Mean)
 #     np.save(pjoin(save_dir, 'Std.npy'), Std)
