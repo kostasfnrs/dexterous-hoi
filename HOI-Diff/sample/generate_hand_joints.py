@@ -138,11 +138,18 @@ def compute_hand_joints(
         flat_hand_mean=True,
         side=side,
     )
-    hand_pose_tensor = torch.tensor(hand_pose, dtype=torch.float32).unsqueeze(0)
+    hand_pose_tensor = torch.from_numpy(hand_pose)
     # add rotation to the end of the hand pose tensor
     # TODO: fix translation kwarg
-    hand_joints = mano_layer(hand_pose_tensor, trans=trans)
-    return hand_joints.squeeze(0).detach().numpy()
+    trans = np.asarray(trans)
+    print(f"trans shape: {trans.shape}")
+    print(f"hand_pose_tensor shape: {hand_pose_tensor.shape}")
+    _, hand_joints = mano_layer(hand_pose_tensor, th_trans=torch.from_numpy(trans))
+
+    batch_size = hand_pose_tensor.shape[0]
+    assert hand_joints.shape == (batch_size, 21, 3)
+
+    return hand_joints.detach().numpy()
 
 
 def convert_hand_to_euler_rot(hand_pose: np.ndarray) -> np.ndarray:
@@ -158,7 +165,7 @@ def convert_hand_to_euler_rot(hand_pose: np.ndarray) -> np.ndarray:
     euler_rot = matrix_to_euler_angles(rot_mat, convention="XYZ")
 
     # concatenate hand pose and Euler rotation
-    hand_pose = np.concatenate([hand_pose[:, :24], euler_rot.detach().numpy()], axis=1)
+    hand_pose = np.concatenate([euler_rot.detach().numpy(), hand_pose[:, :24]], axis=1)
 
     return hand_pose
 
@@ -176,8 +183,6 @@ def generate_hand_joints(
     lhand_euler = convert_hand_to_euler_rot(lhand_poses)
     rhand_euler = convert_hand_to_euler_rot(rhand_poses)
 
-    print("skeleton shape")
-    print(np.asarray(skeleton).shape)
     lhand_wrists = skeleton[:, 20, :]
     rhand_wrists = skeleton[:, 21, :]
     lhand_joints = compute_hand_joints(lhand_euler, lhand_wrists, side="left")
