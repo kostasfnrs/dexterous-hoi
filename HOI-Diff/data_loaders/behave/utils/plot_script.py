@@ -32,6 +32,8 @@ def plot_3d_motion(
     kinematic_tree,
     joints,
     obj_points,
+    lhand_joints,
+    rhand_joints,
     hc_mask,
     oc_mask,
     title,
@@ -103,6 +105,8 @@ def plot_3d_motion(
     height_offset = MINS[2]
     data[:, :, 2] -= height_offset
     obj_points[..., 2] -= height_offset
+    lhand_joints[..., 2] -= height_offset
+    rhand_joints[..., 2] -= height_offset
     # trajec = data[:, 0, [0, 2]]
 
     # if hint is not None:
@@ -138,6 +142,24 @@ def plot_3d_motion(
                 alpha=1.0,
             )
         #         print(trajec[:index, 0].shape)
+        if lhand_joints is not None and rhand_joints is not None:
+            ax.scatter(
+                lhand_joints[index, :, 0],
+                lhand_joints[index, :, 1],
+                lhand_joints[index, :, 2],
+                color="black",
+                s=6,
+                alpha=1.0,
+            )
+            ax.scatter(
+                lhand_joints[index, :, 0],
+                lhand_joints[index, :, 1],
+                lhand_joints[index, :, 2],
+                color="black",
+                s=6,
+                alpha=1.0,
+            )
+
         if obj_points is not None:
             x2 = obj_points[index, :, 0]
             y2 = obj_points[index, :, 1]
