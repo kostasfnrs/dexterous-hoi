@@ -152,9 +152,9 @@ def plot_3d_motion(
                 alpha=1.0,
             )
             ax.scatter(
-                lhand_joints[index, :, 0],
-                lhand_joints[index, :, 1],
-                lhand_joints[index, :, 2],
+                rhand_joints[index, :, 0],
+                rhand_joints[index, :, 1],
+                rhand_joints[index, :, 2],
                 color="black",
                 s=6,
                 alpha=1.0,

@@ -149,7 +149,7 @@ def compute_hand_joints(
     batch_size = hand_pose_tensor.shape[0]
     assert hand_joints.shape == (batch_size, 21, 3)
 
-    return hand_joints.detach().numpy()
+    return hand_joints.detach().numpy() / 1000.0
 
 
 def convert_hand_to_euler_rot(hand_pose: np.ndarray) -> np.ndarray:
