@@ -316,6 +316,8 @@ def main():
         if args.dataset == "kit"
         else paramUtil.t2m_kinematic_chain
     )
+    
+    hand_chain = paramUtil.mano_hand_chain
 
     sample_files = []
     num_samples_in_out_file = 7
@@ -397,6 +399,7 @@ def main():
             plot_3d_motion(
                 animation_save_path,
                 skeleton,
+                hand_chain,
                 motion,
                 obj_points,
                 lhand_joints,

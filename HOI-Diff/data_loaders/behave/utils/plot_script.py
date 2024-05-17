@@ -30,6 +30,7 @@ def list_cut_average(ll, intervals):
 def plot_3d_motion(
     save_path,
     kinematic_tree,
+    hand_kinematic_tree,
     joints,
     obj_points,
     lhand_joints,
@@ -123,7 +124,7 @@ def plot_3d_motion(
         ax.lines = []
         ax.collections = []
         # ax.view_init(elev=120, azim=-90)
-        # ax.dist = 15
+        ax.dist = 7.5
 
         plot_xzPlane(MINS[0], MAXS[0], MINS[1], MAXS[1], 0)
 
@@ -143,22 +144,39 @@ def plot_3d_motion(
             )
         #         print(trajec[:index, 0].shape)
         if lhand_joints is not None and rhand_joints is not None:
-            ax.scatter(
-                lhand_joints[index, :, 0],
-                lhand_joints[index, :, 1],
-                lhand_joints[index, :, 2],
-                color="black",
-                s=6,
-                alpha=1.0,
-            )
-            ax.scatter(
-                rhand_joints[index, :, 0],
-                rhand_joints[index, :, 1],
-                rhand_joints[index, :, 2],
-                color="black",
-                s=6,
-                alpha=1.0,
-            )
+            for chain in hand_kinematic_tree:
+                ax.plot3D(
+                    lhand_joints[index, chain, 0],
+                    lhand_joints[index, chain, 1],
+                    lhand_joints[index, chain, 2],
+                    linewidth=0.5,
+                    color="black",
+                    alpha=1.0,
+                )
+                ax.plot3D(
+                    rhand_joints[index, chain, 0],
+                    rhand_joints[index, chain, 1],
+                    rhand_joints[index, chain, 2],
+                    linewidth=0.5,
+                    color="black",
+                    alpha=1.0,
+                )
+            # ax.scatter(
+            #     lhand_joints[index, :, 0],
+            #     lhand_joints[index, :, 1],
+            #     lhand_joints[index, :, 2],
+            #     color="black",
+            #     s=3,
+            #     alpha=1.0,
+            # )
+            # ax.scatter(
+            #     rhand_joints[index, :, 0],
+            #     rhand_joints[index, :, 1],
+            #     rhand_joints[index, :, 2],
+            #     color="black",
+            #     s=3,
+            #     alpha=1.0,
+            # )
 
         if obj_points is not None:
             x2 = obj_points[index, :, 0]
