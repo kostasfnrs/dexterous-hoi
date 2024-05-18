@@ -3,6 +3,7 @@ import numpy as np
 import torch
 from manopth.manolayer import ManoLayer
 from sample.rotation_conversions import rotation_6d_to_matrix, matrix_to_axis_angle
+from sample.visualize_joints import SkeletonVisualizer
 
 
 def compute_hand_joints(
@@ -21,6 +22,7 @@ def compute_hand_joints(
         ncomps=24,
         flat_hand_mean=True,
         side=side,
+        center_idx=0,
     )
     hand_pose_tensor = torch.from_numpy(hand_pose)
     # add rotation to the end of the hand pose tensor
@@ -28,15 +30,18 @@ def compute_hand_joints(
     trans = np.asarray(trans)
     print(f"trans shape: {trans.shape}")
     print(f"hand_pose_tensor shape: {hand_pose_tensor.shape}")
-    _, hand_joints = mano_layer(hand_pose_tensor, th_trans=torch.from_numpy(trans))
+    # _, hand_joints = mano_layer(hand_pose_tensor, th_trans=torch.from_numpy(trans))
+    _, hand_joints = mano_layer(hand_pose_tensor)
+    hand_joints = hand_joints / 1000.0
+    hand_joints = hand_joints + torch.from_numpy(trans)[:, None, :]
 
     batch_size = hand_pose_tensor.shape[0]
     assert hand_joints.shape == (batch_size, 21, 3)
 
-    return hand_joints.detach().numpy() / 1000.0
+    return hand_joints.detach().numpy()
 
 
-def convert_hand_to_euler_rot(hand_pose: np.ndarray) -> np.ndarray:
+def convert_hand_to_axis_rot_hand(hand_pose: np.ndarray) -> np.ndarray:
     """
     Convert hand pose to Euler rotation.
     Args:
@@ -47,6 +52,7 @@ def convert_hand_to_euler_rot(hand_pose: np.ndarray) -> np.ndarray:
     # convert to Euler angles
     rot_mat = rotation_6d_to_matrix(torch.tensor(rot))
     axis_angle_rot = matrix_to_axis_angle(rot_mat)
+    # axis_angle_rot[:, [0, 1, 2]] = axis_angle_rot[:, [0, 2, 1]]
 
     # concatenate hand pose and axis angle rotation, rotation should be first three values
     hand_pose = np.concatenate(
@@ -66,12 +72,12 @@ def generate_hand_joints(
         lhand_poses: np.ndarray of shape (N, 30)
         rhand_poses: np.ndarray of shape (N, 30)
     """
-    lhand_euler = convert_hand_to_euler_rot(lhand_poses)
-    rhand_euler = convert_hand_to_euler_rot(rhand_poses)
+    lhand_axis_rot = convert_hand_to_axis_rot_hand(lhand_poses)
+    rhand_axis_rot = convert_hand_to_axis_rot_hand(rhand_poses)
 
     lhand_wrists = skeleton[:, 20, :]
     rhand_wrists = skeleton[:, 21, :]
-    lhand_joints = compute_hand_joints(lhand_euler, lhand_wrists, side="left")
-    rhand_joints = compute_hand_joints(rhand_euler, rhand_wrists, side="right")
+    lhand_joints = compute_hand_joints(lhand_axis_rot, lhand_wrists, side="left")
+    rhand_joints = compute_hand_joints(rhand_axis_rot, rhand_wrists, side="right")
 
-    return lhand_joints, rhand_joints
+    return lhand_joints, rhand_joints, lhand_wrists, rhand_wrists

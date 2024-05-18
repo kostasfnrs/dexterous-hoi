@@ -12,11 +12,12 @@ __pycache__/
 __MACOSX/
 HOI-Diff/dataset/behave_t2m/
 HOI-Diff/dataset/behave_t2m_original/
+HOI-Diff/dataset/grab_t2m_standard/
 glove/
 kit/
 t2m/
 save/
-HOI-Diff/body_models/smpl/SMPL_NEUTRAL.pkl
+HOI-Diff/body_models/
 
 
 *.pyc

@@ -35,6 +35,8 @@ def plot_3d_motion(
     obj_points,
     lhand_joints,
     rhand_joints,
+    lhand_wrists,
+    rhand_wrists,
     hc_mask,
     oc_mask,
     title,
@@ -108,6 +110,8 @@ def plot_3d_motion(
     obj_points[..., 2] -= height_offset
     lhand_joints[..., 2] -= height_offset
     rhand_joints[..., 2] -= height_offset
+    lhand_wrists[..., 2] -= height_offset
+    rhand_wrists[..., 2] -= height_offset
     # trajec = data[:, 0, [0, 2]]
 
     # if hint is not None:
@@ -142,41 +146,26 @@ def plot_3d_motion(
                 color=color,
                 alpha=1.0,
             )
+
         #         print(trajec[:index, 0].shape)
         if lhand_joints is not None and rhand_joints is not None:
-            for chain in hand_kinematic_tree:
+            for chain, color in zip(hand_kinematic_tree, used_colors):
                 ax.plot3D(
                     lhand_joints[index, chain, 0],
                     lhand_joints[index, chain, 1],
                     lhand_joints[index, chain, 2],
-                    linewidth=0.5,
-                    color="black",
+                    linewidth=2,
+                    color=color,
                     alpha=1.0,
                 )
                 ax.plot3D(
                     rhand_joints[index, chain, 0],
                     rhand_joints[index, chain, 1],
                     rhand_joints[index, chain, 2],
-                    linewidth=0.5,
-                    color="black",
+                    linewidth=2,
+                    color=color,
                     alpha=1.0,
                 )
-            # ax.scatter(
-            #     lhand_joints[index, :, 0],
-            #     lhand_joints[index, :, 1],
-            #     lhand_joints[index, :, 2],
-            #     color="black",
-            #     s=3,
-            #     alpha=1.0,
-            # )
-            # ax.scatter(
-            #     rhand_joints[index, :, 0],
-            #     rhand_joints[index, :, 1],
-            #     rhand_joints[index, :, 2],
-            #     color="black",
-            #     s=3,
-            #     alpha=1.0,
-            # )
 
         if obj_points is not None:
             x2 = obj_points[index, :, 0]

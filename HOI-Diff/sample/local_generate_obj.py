@@ -316,7 +316,7 @@ def main():
         if args.dataset == "kit"
         else paramUtil.t2m_kinematic_chain
     )
-    
+
     hand_chain = paramUtil.mano_hand_chain
 
     sample_files = []
@@ -393,8 +393,8 @@ def main():
             print(sample_print_template.format(caption, sample_i, rep_i, save_file))
             animation_save_path = os.path.join(out_path, save_file)
 
-            lhand_joints, rhand_joints = generate_hand_joints(
-                motion, motion_lhand, motion_rhand
+            lhand_joints, rhand_joints, lhand_wrists, rhand_wrists = (
+                generate_hand_joints(motion, motion_lhand, motion_rhand)
             )
             plot_3d_motion(
                 animation_save_path,
@@ -404,6 +404,8 @@ def main():
                 obj_points,
                 lhand_joints,
                 rhand_joints,
+                lhand_wrists,
+                rhand_wrists,
                 hc_mask=None,
                 oc_mask=None,
                 title=caption,
