@@ -128,7 +128,7 @@ def plot_3d_motion(
         ax.lines = []
         ax.collections = []
         # ax.view_init(elev=120, azim=-90)
-        ax.dist = 7.5
+        ax.dist = 5
 
         plot_xzPlane(MINS[0], MAXS[0], MINS[1], MAXS[1], 0)
 
@@ -186,13 +186,13 @@ def plot_3d_motion(
             z4 = z2[oc_mask]
             ax.scatter(x4, y4, z4, color="blue", s=6, alpha=1.0)
 
-        plt.axis("off")
-        ax.set_xticklabels([])
-        ax.set_yticklabels([])
-        ax.set_zticklabels([])
-        # ax.set_xlabel("x")
-        # ax.set_ylabel("y")
-        # ax.set_zlabel("z")
+        # plt.axis("off")
+        # ax.set_xticklabels([])
+        # ax.set_yticklabels([])
+        # ax.set_zticklabels([])
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_zlabel("z")
 
     ani = FuncAnimation(
         fig, update, frames=frame_number, interval=1000 / fps, repeat=False

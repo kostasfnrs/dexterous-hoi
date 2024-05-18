@@ -57,19 +57,29 @@ def mean_variance(data_dir, save_dir, joints_num):
     # NOTE: updated with hands, so we take three for the velocity
     Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10].mean() / 1.0
 
-    # left hand, 24 dims
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 10:4 + (joints_num - 1) * 9 + joints_num * 3 + 34].mean() / 1.0
+    rot_dim = 6
+    hand_dim = 24
+    start_dim = 4 + (joints_num - 1) * 9 + joints_num * 3 + 10
+
+    # order is left hand rot, left hand, right hand rot, right hand
+    # you may check this in raw_pose_processing.ipynb
     
     # left hand rot, 6 dims
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 40] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 34:4 + (joints_num - 1) * 9 + joints_num * 3 + 40].mean() / 1.0
+    Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
+    start_dim += rot_dim
 
-    # right hand, 24 dims
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 40:4 + (joints_num - 1) * 9 + joints_num * 3 + 64] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 40:4 + (joints_num - 1) * 9 + joints_num * 3 + 64].mean() / 1.0
+    # left hand, 24 dims
+    Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+    start_dim += hand_dim
 
     # right hand rot, 6 dims
-    Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 64:4 + (joints_num - 1) * 9 + joints_num * 3 + 70] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 64:4 + (joints_num - 1) * 9 + joints_num * 3 + 70].mean() / 1.0
+    Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
+    start_dim += rot_dim
 
-    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * 24 + 2 * 6 == Std.shape[-1]
+    # right hand rot, 24 dims
+    Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+
+    assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * hand_dim + 2 * rot_dim == Std.shape[-1]
 
 #     np.save(pjoin(save_dir, 'Mean.npy'), Mean)
 #     np.save(pjoin(save_dir, 'Std.npy'), Std)
