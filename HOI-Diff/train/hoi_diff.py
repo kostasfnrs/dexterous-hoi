@@ -19,8 +19,8 @@ from diffusion.gaussian_diffusion import LocalMotionDiffusion
 def main():
     args = train_args()
     fixseed(args.seed)
-    train_platform_type = eval(args.train_platform_type)
-    train_platform = train_platform_type(args.save_dir)
+    # train_platform_type = eval(args.train_platform_type)
+    train_platform = TensorboardPlatform(args.save_dir)
     train_platform.report_args(args, name='Args')
 
     if args.save_dir is None:

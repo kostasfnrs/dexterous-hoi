@@ -99,6 +99,10 @@ class HOIDiff(MDM):
             seqTransEncoderLayer_obj_pose, num_layers=2
         )
 
+        self.seqTransEncoder_obj_pose_end = nn.TransformerEncoder(
+            seqTransEncoderLayer_obj_pose, num_layers=2
+        )
+
         self.mutual_attn = MutualAttention(
             num_layers=2, latent_dim=self.latent_dim, input_feats=self.input_feats
         )
@@ -169,7 +173,10 @@ class HOIDiff(MDM):
             output_human = self.seqTransEncoder_end(
                 torch.cat([human_mid[:1], dec_output_human], 0)
             )[1:]
-            output_obj = dec_output_obj
+            # output_obj = dec_output_obj
+            output_obj = self.seqTransEncoder_obj_pose_end(
+                torch.cat([obj_mid[:1], dec_output_obj], 0)
+            )[1:]
 
         output_human = self.output_process(output_human)
         output_obj = self.output_process_obj(output_obj)
