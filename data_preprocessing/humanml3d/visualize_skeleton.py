@@ -32,9 +32,9 @@ class SkeletonVisualizer:
 
     def update(self, frame):
         self.ax.clear()
-        self.ax.set_xlim(-1, 1)
-        self.ax.set_ylim(-1, 1)
-        self.ax.set_zlim(0, 2)
+        # self.ax.set_xlim(-1, 1)
+        # self.ax.set_ylim(-1, 1)
+        # self.ax.set_zlim(0, 2)
         self.ax.set_xlabel('X')
         self.ax.set_ylabel('Y')
         self.ax.set_zlabel('Z')

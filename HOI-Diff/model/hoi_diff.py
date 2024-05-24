@@ -8,6 +8,7 @@ import clip
 from model.mdm import MDM
 from model.mdm import *
 
+NUM_HAND_FEATURES = 63
 
 class HOIDiff(MDM):
     def __init__(
@@ -39,7 +40,7 @@ class HOIDiff(MDM):
     ):
         super(HOIDiff, self).__init__(
             modeltype,
-            njoints - (6 + 2 * 30),
+            njoints - (6 + 2 * NUM_HAND_FEATURES),
             nfeats,
             num_actions,
             translation,
@@ -109,11 +110,11 @@ class HOIDiff(MDM):
 
         # we add 2*(24 + 6) for both 24-dim PCA hand params and 6-dim global rotation
         self.input_process_obj = InputProcess(
-            self.data_rep, 6 + 2 * 30, self.latent_dim
+            self.data_rep, 6 + 2 * NUM_HAND_FEATURES, self.latent_dim
         )
 
         self.output_process_obj = OutputProcess(
-            self.data_rep, 6 + 2 * 30, self.latent_dim, 6 + 2 * 30, self.nfeats
+            self.data_rep, 6 + 2 * NUM_HAND_FEATURES, self.latent_dim, 6 + 2 * NUM_HAND_FEATURES, self.nfeats
         )
 
     def mask_cond_obj(self, cond, force_mask=False):

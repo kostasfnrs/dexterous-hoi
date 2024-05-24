@@ -22,6 +22,12 @@ from data_loaders.behave.utils.paramUtil import *
 from utils.utils import recover_obj_points
 from data_loaders.behave.utils.plot_script import plot_3d_motion
 
+HAND_MODE = "joints"
+if HAND_MODE == "PCA":
+    HAND_FEATURE_DIM = 30
+elif HAND_MODE == "joints":
+    HAND_FEATURE_DIM = 63
+
 
 def collate_fn(batch):
     batch.sort(key=lambda x: x[3], reverse=True)
@@ -559,13 +565,14 @@ class Text2MotionDatasetV2(data.Dataset):
         if not self.opt.use_global:
             "Z Normalization"
             motion = np.copy(motion)
-            if len(self.mean) == 269:
+            if len(self.mean) == 269 + 2*HAND_FEATURE_DIM:
                 np.seterr(all="raise")
                 # print(f'Length of batch: {motion.shape[0]}')
                 # print(f'Std. deviation: {np.mean(self.std)}')
                 try:
-                    motion[:, :269] = (motion[:, :269] - self.mean[:269]) / self.std[
-                        :269
+                    end_idx = 269 + 2*HAND_FEATURE_DIM
+                    motion[:, :end_idx] = (motion[:, :end_idx] - self.mean[:end_idx]) / self.std[
+                        :end_idx
                     ]
                 except FloatingPointError as err:
                     print(err.__class__.__name__)

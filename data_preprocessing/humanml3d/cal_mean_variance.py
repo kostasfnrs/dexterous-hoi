@@ -50,31 +50,32 @@ def mean_variance(data_dir, save_dir, joints_num):
     # foot contact: start from previous end index, add foot_contact_dim = 4
     Std[4 + (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 + 4] = Std[4 + (joints_num - 1) * 9 + joints_num * 3: 4 + (joints_num - 1) * 9 + joints_num * 3 + 4].mean() / 1.0
     
-    # start from previous end index, add 3 more dimensions for object position?
+    # start from previous end index, add 3 more dimensions for object position
     Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 4: 4 + (joints_num - 1) * 9 + joints_num * 3 + 7] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 4:4 + (joints_num - 1) * 9 + joints_num * 3 + 7].mean() / 1.0
     
-    # final 3 dimensions for object velocity?
-    # NOTE: updated with hands, so we take three for the velocity
+    # final 3 dimensions for object rotation
     Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10] = Std[4 + (joints_num - 1) * 9 + joints_num * 3 + 7:4 + (joints_num - 1) * 9 + joints_num * 3 + 10].mean() / 1.0
 
-    rot_dim = 6
-    hand_dim = 24
+    # hand data from GRAB
+    rot_dim = 0
+    hand_dim = 63
     start_dim = 4 + (joints_num - 1) * 9 + joints_num * 3 + 10
 
     # order is left hand rot, left hand, right hand rot, right hand
     # you may check this in raw_pose_processing.ipynb
-    
-    # left hand rot, 6 dims
-    Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
-    start_dim += rot_dim
+    if rot_dim != 0:
+        # left hand rot, 6 dims
+        Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
+        start_dim += rot_dim
 
     # left hand, 24 dims
     Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
     start_dim += hand_dim
 
-    # right hand rot, 6 dims
-    Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
-    start_dim += rot_dim
+    if rot_dim != 0:
+        # right hand rot, 6 dims
+        Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
+        start_dim += rot_dim
 
     # right hand rot, 24 dims
     Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0

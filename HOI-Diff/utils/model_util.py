@@ -10,6 +10,11 @@ from diffusion.gaussian_diffusion import (
 )
 import torch
 
+HAND_MODE = "joints"
+if HAND_MODE == "PCA":
+    HAND_FEATURE_DIM = 30
+elif HAND_MODE == "joints":
+    HAND_FEATURE_DIM = 63
 
 def load_model_wo_clip(model, state_dict):
     missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
@@ -100,7 +105,7 @@ def get_model_args(args, data):
         data_rep = "hml_vec"
 
         # add 2*(24 + 6) for PCA mano pose and global rotation in 6d
-        njoints = 269 + 2 * 30
+        njoints = 269 + 2 * HAND_FEATURE_DIM
         nfeats = 1
 
     return {

@@ -32,6 +32,12 @@ from diffusion.gaussian_diffusion import LocalMotionDiffusion
 
 from sample.generate_hand_joints import generate_hand_joints
 
+HAND_MODE = "joints"
+if HAND_MODE == "PCA":
+    HAND_FEATURE_DIM = 30
+elif HAND_MODE == "joints":
+    HAND_FEATURE_DIM = 63
+
 
 def main():
     args = generate_args()
@@ -210,7 +216,7 @@ def main():
             motion_model,
             (
                 args.batch_size,
-                motion_model.njoints + 6 + 2 * 30,
+                motion_model.njoints + 6 + 2 * HAND_FEATURE_DIM,
                 motion_model.nfeats,
                 n_frames,
             ),  # + 6 object pose
@@ -229,7 +235,7 @@ def main():
         # sample shape: [num_samples (usually 5), motion_dim (329), 1, seq_len]
         # get hand  sample before permutations are done
 
-        # NOTE: this denormalizes the data, we still need to do this for the hands
+        # this denormalization is done on the full sample, including the hands
         sample = data.dataset.t2m_dataset.inv_transform(
             sample.cpu().permute(0, 2, 3, 1)
         ).float()
@@ -242,8 +248,8 @@ def main():
 
         sample_hands = sample[..., 269:]
 
-        lhand_sample = sample_hands[..., :30]
-        rhand_sample = sample_hands[..., 30:]
+        lhand_sample = sample_hands[..., :HAND_FEATURE_DIM]
+        rhand_sample = sample_hands[..., HAND_FEATURE_DIM:]
 
         rhand_sample = rhand_sample.permute(0, 1, 3, 2)
         lhand_sample = lhand_sample.permute(0, 1, 3, 2)

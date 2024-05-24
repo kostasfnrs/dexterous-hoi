@@ -85,25 +85,53 @@ def extract_global_orient(hand_pose: np.ndarray) -> Tuple[np.ndarray, np.ndarray
 
 
 def generate_hand_joints(
-    skeleton: np.ndarray, lhand_poses: np.ndarray, rhand_poses: np.ndarray
+    skeleton: np.ndarray,
+    lhand_poses: np.ndarray,
+    rhand_poses: np.ndarray,
+    hand_mode: str = "joints",
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Add PCA hands to the skeleton. Hand poses are 24 PCA pose parameters and 6D rotation.
     Args:
         skeleton: np.ndarray of shape (N, 22, 3)
+
+        If hand_mode is 'joints':
+        Hand poses are flattened 21x3 hand joint positions, centered around the wrist
+        lhand_poses: np.ndarray of shape (N, 63)
+        rhand_poses: np.ndarray of shape (N, 63)
+
+        If hand_mode is 'PCA':
+        Hand poses are [6d rotation, 24d hand pose]
         lhand_poses: np.ndarray of shape (N, 30)
         rhand_poses: np.ndarray of shape (N, 30)
     """
-    lhand_global_orient, lhand_poses = extract_global_orient(lhand_poses)
-    rhand_global_orient, rhand_poses = extract_global_orient(rhand_poses)
+    if hand_mode == "PCA":
+        lhand_global_orient, lhand_poses = extract_global_orient(lhand_poses)
+        rhand_global_orient, rhand_poses = extract_global_orient(rhand_poses)
 
-    lhand_wrists = skeleton[:, 20, :]
-    rhand_wrists = skeleton[:, 21, :]
-    lhand_joints = compute_hand_joints(
-        lhand_poses, lhand_global_orient, lhand_wrists, side="left"
-    )
-    rhand_joints = compute_hand_joints(
-        rhand_poses, rhand_global_orient, rhand_wrists, side="right"
-    )
+        lhand_wrists = skeleton[:, 20, :]
+        rhand_wrists = skeleton[:, 21, :]
+        lhand_joints = compute_hand_joints(
+            lhand_poses, lhand_global_orient, lhand_wrists, side="left"
+        )
+        rhand_joints = compute_hand_joints(
+            rhand_poses, rhand_global_orient, rhand_wrists, side="right"
+        )
+    elif hand_mode == "joints":
+        lhand_wrists = skeleton[:, 20, :]
+        rhand_wrists = skeleton[:, 21, :]
+        lhand_poses = torch.from_numpy(lhand_poses)
+        rhand_poses = torch.from_numpy(rhand_poses)
+
+        lhand_joints = lhand_poses.unflatten(1, (21, 3)) + lhand_wrists[:, None, :]
+        rhand_joints = rhand_poses.unflatten(1, (21, 3)) + rhand_wrists[:, None, :]
+
+        from sample.visualize_joints import SkeletonVisualizer
+
+        # vis = SkeletonVisualizer(lhand_joints)
+        # vis.animate()
+
+    else:
+        raise NotImplementedError(f"Invalid hand_mode: {hand_mode}")
 
     return lhand_joints, rhand_joints, lhand_wrists, rhand_wrists
