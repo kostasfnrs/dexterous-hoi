@@ -13,6 +13,7 @@ __MACOSX/
 HOI-Diff/dataset/behave_t2m/
 HOI-Diff/dataset/behave_t2m_original/
 HOI-Diff/dataset/grab_t2m_standard/
+HOI-Diff/dataset/grab_t2m_hands_6d_pca/
 glove/
 kit/
 t2m/

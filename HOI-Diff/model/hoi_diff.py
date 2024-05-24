@@ -96,6 +96,15 @@ class HOIDiff(MDM):
             activation=self.activation,
         )
 
+        seqTransEncoderLayer_hands = nn.TransformerEncoderLayer(
+            d_model=self.latent_dim,
+            nhead=self.num_heads,
+            dim_feedforward=self.ff_size,
+            dropout=self.dropout,
+            activation=self.activation,
+        )
+
+
         self.seqTransEncoder_obj_pose = nn.TransformerEncoder(
             seqTransEncoderLayer_obj_pose, num_layers=2
         )
@@ -104,18 +113,37 @@ class HOIDiff(MDM):
             seqTransEncoderLayer_obj_pose, num_layers=2
         )
 
+        self.seqTransEncoder_hands = nn.TransformerEncoder(
+            seqTransEncoderLayer_hands, num_layers=2
+        )
+
+        self.seqTransEncoder_hands_end = nn.TransformerEncoder(
+            seqTransEncoderLayer_hands, num_layers=2
+        )
+
         self.mutual_attn = MutualAttention(
             num_layers=2, latent_dim=self.latent_dim, input_feats=self.input_feats
         )
 
         # we add 2*(24 + 6) for both 24-dim PCA hand params and 6-dim global rotation
         self.input_process_obj = InputProcess(
-            self.data_rep, 6 + 2 * NUM_HAND_FEATURES, self.latent_dim
+            self.data_rep, 6, self.latent_dim
         )
 
         self.output_process_obj = OutputProcess(
-            self.data_rep, 6 + 2 * NUM_HAND_FEATURES, self.latent_dim, 6 + 2 * NUM_HAND_FEATURES, self.nfeats
+            self.data_rep, 6, self.latent_dim, 6, self.nfeats
         )
+
+        self.input_process_hand = InputProcess(
+            self.data_rep, 2 * NUM_HAND_FEATURES, self.latent_dim
+        )
+
+        self.output_process_hand = OutputProcess(
+            self.data_rep, 2 * NUM_HAND_FEATURES, self.latent_dim, 2 * NUM_HAND_FEATURES, self.nfeats
+        )
+
+
+
 
     def mask_cond_obj(self, cond, force_mask=False):
         seq, bs, d = cond.shape
@@ -142,7 +170,7 @@ class HOIDiff(MDM):
         timesteps: [batch_size] (int)
         """
 
-        x_human, x_obj = x[:, :263], x[:, 263:]
+        x_human, x_obj, x_hands = x[:, :263], x[:, 263:269], x[:, 269:]
 
         # Build embedding vector
         emb = self.embed_timestep(timesteps)  # [1, bs, d]
@@ -158,6 +186,7 @@ class HOIDiff(MDM):
 
         x_human = self.input_process(x_human)
         x_obj = self.input_process_obj(x_obj)
+        x_hands = self.input_process_hand(x_hands)
 
         xseq_human = torch.cat((emb, x_human), axis=0)  # [seqlen+1, bs, d]
         xseq_human = self.sequence_pos_encoder(xseq_human)  # [seqlen+1, bs, d]
@@ -167,10 +196,23 @@ class HOIDiff(MDM):
         xseq_obj = self.sequence_pos_encoder(xseq_obj)
         obj_mid = self.seqTransEncoder_obj_pose(xseq_obj)
 
+        xseq_hands = torch.cat((emb, x_hands), axis=0)
+        xseq_hands = self.sequence_pos_encoder(xseq_hands)
+        hands_mid = self.seqTransEncoder_hands(xseq_hands)
+
+
         if self.args.multi_backbone_split < self.num_layers:
             dec_output_human, dec_output_obj = self.mutual_attn(
                 human_mid[1:], obj_mid[1:]
             )
+
+            # another pairwise attention
+            # TODO: change the code such that hands attend to body, but not the other way around
+            # or extend the attention here to be pairwise
+            _, dec_output_hands = self.mutual_attn(
+                human_mid[1:], hands_mid[1:]
+            )
+
             output_human = self.seqTransEncoder_end(
                 torch.cat([human_mid[:1], dec_output_human], 0)
             )[1:]
@@ -179,10 +221,15 @@ class HOIDiff(MDM):
                 torch.cat([obj_mid[:1], dec_output_obj], 0)
             )[1:]
 
+            output_hands = self.seqTransEncoder_hands_end(
+                torch.cat([hands_mid[:1], dec_output_hands], 0)
+            )[1:]
+
         output_human = self.output_process(output_human)
         output_obj = self.output_process_obj(output_obj)
+        output_hands = self.output_process_hand(output_hands)
 
-        output = torch.cat([output_human, output_obj], dim=1)
+        output = torch.cat([output_human, output_obj, output_hands], dim=1)
 
         return output
 
