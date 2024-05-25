@@ -16,6 +16,7 @@ if HAND_MODE == "PCA":
 elif HAND_MODE == "joints":
     HAND_FEATURE_DIM = 63
 
+
 def load_model_wo_clip(model, state_dict):
     missing_keys, unexpected_keys = model.load_state_dict(state_dict, strict=False)
     # assert len(unexpected_keys) == 0

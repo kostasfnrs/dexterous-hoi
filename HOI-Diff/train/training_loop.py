@@ -16,6 +16,7 @@ from diffusion.resample import LossAwareSampler, UniformSampler
 from tqdm import tqdm
 from diffusion.resample import create_named_schedule_sampler
 from data_loaders.behave.networks.evaluator_wrapper import EvaluatorMDMWrapper
+
 # from eval import eval_behave
 from data_loaders.get_data import get_dataset_loader
 
@@ -48,7 +49,7 @@ class TrainLoop:
 
         self.step = 0
         self.resume_step = 0
-        self.global_batch = self.batch_size # * dist.get_world_size()
+        self.global_batch = self.batch_size  # * dist.get_world_size()
         self.num_steps = args.num_steps
         self.num_epochs = self.num_steps // len(self.data) + 1
 
@@ -73,28 +74,44 @@ class TrainLoop:
             # being specified at the command line.
 
         self.device = torch.device("cpu")
-        if torch.cuda.is_available() and dist_util.dev() != 'cpu':
+        if torch.cuda.is_available() and dist_util.dev() != "cpu":
             self.device = torch.device(dist_util.dev())
 
-        self.schedule_sampler_type = 'uniform'
-        self.schedule_sampler = create_named_schedule_sampler(self.schedule_sampler_type, diffusion)
+        self.schedule_sampler_type = "uniform"
+        self.schedule_sampler = create_named_schedule_sampler(
+            self.schedule_sampler_type, diffusion
+        )
         self.eval_wrapper, self.eval_data, self.eval_gt_data = None, None, None
-        if args.dataset in ['kit', 'humanml'] and args.eval_during_training:
+        if args.dataset in ["kit", "humanml"] and args.eval_during_training:
             mm_num_samples = 0  # mm is super slow hence we won't run it during training
             mm_num_repeats = 0  # mm is super slow hence we won't run it during training
-            gen_loader = get_dataset_loader(name=args.dataset, batch_size=args.eval_batch_size, num_frames=None,
-                                            split=args.eval_split,
-                                            hml_mode='eval')
+            gen_loader = get_dataset_loader(
+                name=args.dataset,
+                batch_size=args.eval_batch_size,
+                num_frames=None,
+                split=args.eval_split,
+                hml_mode="eval",
+            )
 
-            self.eval_gt_data = get_dataset_loader(name=args.dataset, batch_size=args.eval_batch_size, num_frames=None,
-                                                   split=args.eval_split,
-                                                   hml_mode='gt')
+            self.eval_gt_data = get_dataset_loader(
+                name=args.dataset,
+                batch_size=args.eval_batch_size,
+                num_frames=None,
+                split=args.eval_split,
+                hml_mode="gt",
+            )
             self.eval_wrapper = EvaluatorMDMWrapper(args.dataset, dist_util.dev())
             self.eval_data = {
-                'test': lambda: eval_behave.get_mdm_loader(
-                    model, diffusion, args.eval_batch_size,
-                    gen_loader, mm_num_samples, mm_num_repeats, gen_loader.dataset.opt.max_motion_length,
-                    args.eval_num_samples, scale=1.,
+                "test": lambda: eval_behave.get_mdm_loader(
+                    model,
+                    diffusion,
+                    args.eval_batch_size,
+                    gen_loader,
+                    mm_num_samples,
+                    mm_num_repeats,
+                    gen_loader.dataset.opt.max_motion_length,
+                    args.eval_num_samples,
+                    scale=1.0,
                 )
             }
         self.use_ddp = False
@@ -125,26 +142,37 @@ class TrainLoop:
             self.opt.load_state_dict(state_dict)
 
     def run_loop(self):
-
         for epoch in range(self.num_epochs):
-            print(f'Starting epoch {epoch}')
+            print(f"Starting epoch {epoch}")
             for motion, cond in tqdm(self.data):
-                if not (not self.lr_anneal_steps or self.step + self.resume_step < self.lr_anneal_steps):
+                if not (
+                    not self.lr_anneal_steps
+                    or self.step + self.resume_step < self.lr_anneal_steps
+                ):
                     break
 
                 motion = motion.to(self.device)
-                cond['y'] = {key: val.to(self.device) if torch.is_tensor(val) else val for key, val in cond['y'].items()}
+                cond["y"] = {
+                    key: val.to(self.device) if torch.is_tensor(val) else val
+                    for key, val in cond["y"].items()
+                }
 
                 self.run_step(motion, cond)
                 if self.step % self.log_interval == 0:
-                    for k,v in logger.get_current().name2val.items():
-                        if k == 'loss':
-                            print('step[{}]: loss[{:0.5f}]'.format(self.step+self.resume_step, v))
+                    for k, v in logger.get_current().name2val.items():
+                        if k == "loss":
+                            print(
+                                "step[{}]: loss[{:0.5f}]".format(
+                                    self.step + self.resume_step, v
+                                )
+                            )
 
-                        if k in ['step', 'samples'] or '_q' in k:
+                        if k in ["step", "samples"] or "_q" in k:
                             continue
                         else:
-                            self.train_platform.report_scalar(name=k, value=v, iteration=self.step, group_name='Loss')
+                            self.train_platform.report_scalar(
+                                name=k, value=v, iteration=self.step, group_name="Loss"
+                            )
 
                 if self.step % self.save_interval == 0:
                     self.save()
@@ -156,7 +184,10 @@ class TrainLoop:
                     if os.environ.get("DIFFUSION_TRAINING_TEST", "") and self.step > 0:
                         return
                 self.step += 1
-            if not (not self.lr_anneal_steps or self.step + self.resume_step < self.lr_anneal_steps):
+            if not (
+                not self.lr_anneal_steps
+                or self.step + self.resume_step < self.lr_anneal_steps
+            ):
                 break
         # Save the last checkpoint if it wasn't already saved.
         if (self.step - 1) % self.save_interval != 0:
@@ -168,23 +199,39 @@ class TrainLoop:
             return
         start_eval = time.time()
         if self.eval_wrapper is not None:
-            print('Running evaluation loop: [Should take about 90 min]')
-            log_file = os.path.join(self.save_dir, f'eval_behave_{(self.step + self.resume_step):09d}.log')
+            print("Running evaluation loop: [Should take about 90 min]")
+            log_file = os.path.join(
+                self.save_dir, f"eval_behave_{(self.step + self.resume_step):09d}.log"
+            )
             diversity_times = 300
             mm_num_times = 0  # mm is super slow hence we won't run it during training
             eval_dict = eval_behave.evaluation(
-                self.eval_wrapper, self.eval_gt_data, self.eval_data, log_file,
-                replication_times=self.args.eval_rep_times, diversity_times=diversity_times, mm_num_times=mm_num_times, run_mm=False)
+                self.eval_wrapper,
+                self.eval_gt_data,
+                self.eval_data,
+                log_file,
+                replication_times=self.args.eval_rep_times,
+                diversity_times=diversity_times,
+                mm_num_times=mm_num_times,
+                run_mm=False,
+            )
             print(eval_dict)
             for k, v in eval_dict.items():
-                if k.startswith('R_precision'):
+                if k.startswith("R_precision"):
                     for i in range(len(v)):
-                        self.train_platform.report_scalar(name=f'top{i + 1}_' + k, value=v[i],
-                                                          iteration=self.step + self.resume_step,
-                                                          group_name='Eval')
+                        self.train_platform.report_scalar(
+                            name=f"top{i + 1}_" + k,
+                            value=v[i],
+                            iteration=self.step + self.resume_step,
+                            group_name="Eval",
+                        )
                 else:
-                    self.train_platform.report_scalar(name=k, value=v, iteration=self.step + self.resume_step,
-                                                      group_name='Eval')
+                    self.train_platform.report_scalar(
+                        name=k,
+                        value=v,
+                        iteration=self.step + self.resume_step,
+                        group_name="Eval",
+                    )
 
         # elif self.dataset in ['humanact12', 'uestc']:
         #     eval_args = SimpleNamespace(num_seeds=self.args.eval_rep_times, num_samples=self.args.eval_num_samples,
@@ -200,8 +247,7 @@ class TrainLoop:
         #             self.train_platform.report_scalar(name=k, value=np.array(v).astype(float).mean(), iteration=self.step, group_name='Eval Unconstrained')
 
         end_eval = time.time()
-        print(f'Evaluation time: {round(end_eval-start_eval)/60}min')
-
+        print(f"Evaluation time: {round(end_eval-start_eval)/60}min")
 
     def run_step(self, batch, cond):
         self.forward_backward(batch, cond)
@@ -210,8 +256,7 @@ class TrainLoop:
         self.log_step()
 
     def compute_losses(self, micro, t, micro_cond):
-
-        seq_mask = micro_cond['y']['mask']
+        seq_mask = micro_cond["y"]["mask"]
         output = self.diffusion.training_losses(
             model=self.ddp_model,
             x_start=micro,  # [bs, ch, image_size, image_size]
@@ -238,12 +283,11 @@ class TrainLoop:
             last_batch = (i + self.microbatch) >= batch.shape[0]
             t, weights = self.schedule_sampler.sample(micro.shape[0], dist_util.dev())
 
-
             if last_batch or not self.use_ddp:
-                losses = self.compute_losses(micro,t, micro_cond)
+                losses = self.compute_losses(micro, t, micro_cond)
             else:
                 with self.ddp_model.no_sync():
-                    losses = self.compute_losses(micro,t, micro_cond)
+                    losses = self.compute_losses(micro, t, micro_cond)
 
             if isinstance(self.schedule_sampler, LossAwareSampler):
                 self.schedule_sampler.update_with_local_losses(
@@ -268,17 +312,15 @@ class TrainLoop:
         logger.logkv("step", self.step + self.resume_step)
         logger.logkv("samples", (self.step + self.resume_step + 1) * self.global_batch)
 
-
     def ckpt_file_name(self):
         return f"model{(self.step+self.resume_step):09d}.pt"
-
 
     def save(self):
         def save_checkpoint(params):
             state_dict = self.mp_trainer.master_params_to_state_dict(params)
 
             # Do not save CLIP weights
-            clip_weights = [e for e in state_dict.keys() if e.startswith('clip_model.')]
+            clip_weights = [e for e in state_dict.keys() if e.startswith("clip_model.")]
             for e in clip_weights:
                 del state_dict[e]
 
@@ -326,6 +368,7 @@ def find_resume_checkpoint():
 def log_loss_dict(diffusion, ts, losses):
     for key, values in losses.items():
         logger.logkv_mean(key, values.mean().item())
+        # logger.log(f"loss key: {key}, mean: {values.mean().item()}, shape: {values.shape}")
         # Log the quantiles (four quartiles, in particular).
         for sub_t, sub_loss in zip(ts.cpu().numpy(), values.detach().cpu().numpy()):
             quartile = int(4 * sub_t / diffusion.num_timesteps)

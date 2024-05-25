@@ -1787,7 +1787,7 @@ class LocalMotionDiffusion(GaussianDiffusion):
         items = super().training_losses(self._wrap_model(model), *args, **kwargs)
         
         # hardcode
-        loss_mse = self.masked_l2(items['target'][:, :269], items['pred'][:, :269], mask) # mean_flat(rot_mse)
+        loss_mse = self.masked_l2(items['target'][:, :], items['pred'][:, :], mask) # mean_flat(rot_mse)
         losses = {}
         losses["loss"] = loss_mse
 

@@ -8,7 +8,12 @@ import clip
 from model.mdm import MDM
 from model.mdm import *
 
-NUM_HAND_FEATURES = 63
+HAND_MODE = "joints"
+if HAND_MODE == "PCA":
+    HAND_FEATURE_DIM = 30
+elif HAND_MODE == "joints":
+    HAND_FEATURE_DIM = 63
+
 
 class HOIDiff(MDM):
     def __init__(
@@ -40,7 +45,7 @@ class HOIDiff(MDM):
     ):
         super(HOIDiff, self).__init__(
             modeltype,
-            njoints - (6 + 2 * NUM_HAND_FEATURES),
+            njoints - (6 + 2 * HAND_FEATURE_DIM),
             nfeats,
             num_actions,
             translation,
@@ -104,7 +109,6 @@ class HOIDiff(MDM):
             activation=self.activation,
         )
 
-
         self.seqTransEncoder_obj_pose = nn.TransformerEncoder(
             seqTransEncoderLayer_obj_pose, num_layers=2
         )
@@ -126,24 +130,23 @@ class HOIDiff(MDM):
         )
 
         # we add 2*(24 + 6) for both 24-dim PCA hand params and 6-dim global rotation
-        self.input_process_obj = InputProcess(
-            self.data_rep, 6, self.latent_dim
-        )
+        self.input_process_obj = InputProcess(self.data_rep, 6, self.latent_dim)
 
         self.output_process_obj = OutputProcess(
             self.data_rep, 6, self.latent_dim, 6, self.nfeats
         )
 
         self.input_process_hand = InputProcess(
-            self.data_rep, 2 * NUM_HAND_FEATURES, self.latent_dim
+            self.data_rep, 2 * HAND_FEATURE_DIM, self.latent_dim
         )
 
         self.output_process_hand = OutputProcess(
-            self.data_rep, 2 * NUM_HAND_FEATURES, self.latent_dim, 2 * NUM_HAND_FEATURES, self.nfeats
+            self.data_rep,
+            2 * HAND_FEATURE_DIM,
+            self.latent_dim,
+            2 * HAND_FEATURE_DIM,
+            self.nfeats,
         )
-
-
-
 
     def mask_cond_obj(self, cond, force_mask=False):
         seq, bs, d = cond.shape
@@ -200,7 +203,6 @@ class HOIDiff(MDM):
         xseq_hands = self.sequence_pos_encoder(xseq_hands)
         hands_mid = self.seqTransEncoder_hands(xseq_hands)
 
-
         if self.args.multi_backbone_split < self.num_layers:
             dec_output_human, dec_output_obj = self.mutual_attn(
                 human_mid[1:], obj_mid[1:]
@@ -209,9 +211,7 @@ class HOIDiff(MDM):
             # another pairwise attention
             # TODO: change the code such that hands attend to body, but not the other way around
             # or extend the attention here to be pairwise
-            _, dec_output_hands = self.mutual_attn(
-                human_mid[1:], hands_mid[1:]
-            )
+            _, dec_output_hands = self.mutual_attn(human_mid[1:], hands_mid[1:])
 
             output_human = self.seqTransEncoder_end(
                 torch.cat([human_mid[:1], dec_output_human], 0)

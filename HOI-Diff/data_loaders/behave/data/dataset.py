@@ -181,8 +181,11 @@ class Text2AffordDataset(data.Dataset):
 
 class TextOnlyDataset(data.Dataset):
     def __init__(self, opt, mean, std, split_file):
-        self.mean = mean[: opt.dim_pose]
-        self.std = std[: opt.dim_pose]
+        # more length limiting for some reason - disable this
+        # self.mean = mean[: opt.dim_pose]
+        # self.std = std[: opt.dim_pose]
+        self.mean = mean
+        self.std = std
         self.opt = opt
         self.data_dict = []
         self.max_length = 20
@@ -303,7 +306,9 @@ class TextOnlyDataset(data.Dataset):
 
     def inv_transform(self, data):
         data = data.clone()
-        if data.shape[-1] == 269:
+        if data.shape[-1] == 269 + 2 * HAND_FEATURE_DIM:
+            assert len(self.mean) == 269 + 2 * HAND_FEATURE_DIM, f"Mean feature dim {len(self.mean)} is not matching"
+            assert len(self.std) == 269 + 2 * HAND_FEATURE_DIM, f"Std feature dim {len(self.std)} is not matching"
             data = data * self.std + self.mean
         else:
             data[..., :263] = data[..., :263] * self.std[:263] + self.mean[:263]
@@ -362,14 +367,13 @@ class Text2MotionDatasetV2(data.Dataset):
         data_dict = {}
         id_list = []
 
-
         with cs.open(split_file, "r") as f:
             for line in f.readlines():
                 id_list.append(line.strip())
 
         new_name_list = []
         length_list = []
-        print(f'Length of id_list: {len(id_list)}')
+        print(f"Length of id_list: {len(id_list)}")
         for name in tqdm(id_list):
             try:
                 motion = np.load(pjoin(opt.motion_dir, name + ".npy"))
@@ -565,15 +569,15 @@ class Text2MotionDatasetV2(data.Dataset):
         if not self.opt.use_global:
             "Z Normalization"
             motion = np.copy(motion)
-            if len(self.mean) == 269 + 2*HAND_FEATURE_DIM:
+            if len(self.mean) == 269 + 2 * HAND_FEATURE_DIM:
                 np.seterr(all="raise")
                 # print(f'Length of batch: {motion.shape[0]}')
                 # print(f'Std. deviation: {np.mean(self.std)}')
                 try:
-                    end_idx = 269 + 2*HAND_FEATURE_DIM
-                    motion[:, :end_idx] = (motion[:, :end_idx] - self.mean[:end_idx]) / self.std[
-                        :end_idx
-                    ]
+                    end_idx = 269 + 2 * HAND_FEATURE_DIM
+                    motion[:, :end_idx] = (
+                        motion[:, :end_idx] - self.mean[:end_idx]
+                    ) / self.std[:end_idx]
                 except FloatingPointError as err:
                     print(err.__class__.__name__)
                     print(err)
@@ -663,18 +667,22 @@ class Behave(data.Dataset):
 
         elif self.training_stage == 2:
             if mode == "gt":
+                print('Loading ground truth mean and std')
                 # used by T2M models (including evaluators)
                 self.mean = np.load(pjoin(opt.meta_dir, f"t2m_mean.npy"))
                 self.std = np.load(pjoin(opt.meta_dir, f"t2m_std.npy"))
 
             elif mode in ["train", "eval", "text_only"]:
                 # used by our models
+                print(f'Loading local mean and std from {opt.data_root}')
                 self.mean = np.load(pjoin(opt.data_root, "Mean_local.npy"))
                 self.std = np.load(pjoin(opt.data_root, "Std_local.npy"))
+                print(f"Mean: {self.mean.shape}  Std: {self.std.shape}")
 
             if mode == "eval":
                 # used by T2M models (including evaluators)
                 # this is to translate their norms to ours
+                print('Loading eval mean and std')
 
                 self.mean_for_eval = np.load(pjoin(opt.meta_dir, f"t2m_mean.npy"))
                 self.std_for_eval = np.load(pjoin(opt.meta_dir, f"t2m_std.npy"))
