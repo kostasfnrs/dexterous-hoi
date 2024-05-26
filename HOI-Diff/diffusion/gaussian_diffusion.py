@@ -189,10 +189,32 @@ class GaussianDiffusion:
 
         self.l2_loss = lambda a, b: (a - b) ** 2  # th.nn.MSELoss(reduction='none')  # must be None for handling mask later on.
 
+    def masked_l2_per_branch(self, a, b, mask):
+        # assuming a.shape == b.shape == bs, J, Jdim, seqlen
+        # assuming mask.shape == bs, 1, 1, seqlen
+        loss = self.l2_loss(a, b) # [bs, pose_dim, 1, seq_len] 
+        # sum_flat takes the sum over all non-batch dimensions
+
+        body_loss = sum_flat(loss[:,:263] * mask.float())
+        obj_loss = sum_flat(loss[:,263:269] * mask.float())
+        hands_loss = sum_flat(loss[:,269:] * mask.float())
+        
+        n_entries = a.shape[1] * a.shape[2]
+        non_zero_elements = sum_flat(mask) * n_entries
+        # print('mask', mask.shape)
+        # print('non_zero_elements', non_zero_elements)
+        # print('loss', loss)
+        body_loss_val = body_loss / non_zero_elements
+        obj_loss_val = obj_loss / non_zero_elements
+        hands_loss_val = hands_loss / non_zero_elements
+
+        return body_loss_val, obj_loss_val, hands_loss_val # shapes [bs]
+
     def masked_l2(self, a, b, mask):
         # assuming a.shape == b.shape == bs, J, Jdim, seqlen
         # assuming mask.shape == bs, 1, 1, seqlen
-        loss = self.l2_loss(a, b)
+        loss = self.l2_loss(a, b) # [bs, pose_dim, 1, seq_len] 
+        # sum_flat takes the sum over all non-batch dimensions
         loss = sum_flat(loss * mask.float())  # gives \sigma_euclidean over unmasked elements
         n_entries = a.shape[1] * a.shape[2]
         non_zero_elements = sum_flat(mask) * n_entries
@@ -201,7 +223,7 @@ class GaussianDiffusion:
         # print('loss', loss)
         mse_loss_val = loss / non_zero_elements
         # print('mse_loss_val', mse_loss_val)
-        return mse_loss_val
+        return mse_loss_val # shape [bs]
 
 
     def q_mean_variance(self, x_start, t):
@@ -1786,10 +1808,15 @@ class LocalMotionDiffusion(GaussianDiffusion):
 
         items = super().training_losses(self._wrap_model(model), *args, **kwargs)
         
-        # hardcode
+        # fixed hardcoded loss length
         loss_mse = self.masked_l2(items['target'][:, :], items['pred'][:, :], mask) # mean_flat(rot_mse)
+        body_loss, obj_loss, hands_loss = self.masked_l2_per_branch(items['target'][:, :], items['pred'][:, :], mask)
+
         losses = {}
         losses["loss"] = loss_mse
+        losses['loss_body'] = body_loss
+        losses['loss_obj'] = obj_loss
+        losses['loss_hands'] = hands_loss
 
         return losses
 
