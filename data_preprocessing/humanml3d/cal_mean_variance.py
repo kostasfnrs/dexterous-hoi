@@ -68,8 +68,9 @@ def mean_variance(data_dir, save_dir, joints_num):
         Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
         start_dim += rot_dim
 
-    # left hand, 24 dims
-    Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+    # left hand
+    # Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+    Std[start_dim:start_dim + hand_dim] += 1e-6
     start_dim += hand_dim
 
     if rot_dim != 0:
@@ -77,8 +78,9 @@ def mean_variance(data_dir, save_dir, joints_num):
         Std[start_dim:start_dim + rot_dim] = Std[start_dim:start_dim + rot_dim].mean() / 1.0
         start_dim += rot_dim
 
-    # right hand rot, 24 dims
-    Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+    # right hand
+    # Std[start_dim:start_dim + hand_dim] = Std[start_dim:start_dim + hand_dim].mean() / 1.0
+    Std[start_dim:start_dim + hand_dim] += 1e-6
 
     assert 8 + (joints_num - 1) * 9 + joints_num * 3 + 6 + 2 * hand_dim + 2 * rot_dim == Std.shape[-1]
 
