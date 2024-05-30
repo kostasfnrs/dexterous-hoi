@@ -58,30 +58,34 @@ def compute_hand_joints(
     return hand_joints.detach().numpy()
 
 
-def extract_global_orient(hand_pose: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def extract_global_orient(
+    hand_pose: np.ndarray, rot_mode: str = "cont_6d"
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Convert hand pose to Euler rotation.
     Args:
         hand_pose: np.ndarray of shape (N, 30)
     """
-    # extract 6D rotation from hand pose
-    rot = hand_pose[:, :6]
-    # convert to Euler angles
-    rot_mat = rotation_6d_to_matrix(torch.tensor(rot))
-    # rot_mat[:, [0, 1, 2]] = rot_mat[:, [0, 2, 1]]
+    if rot_mode == "cont_6d":
+        # extract 6D rotation from hand pose
+        rot = hand_pose[:, :6]
+        # convert to Euler angles
+        rot_mat = rotation_6d_to_matrix(torch.tensor(rot))
+        # rot_mat[:, [0, 1, 2]] = rot_mat[:, [0, 2, 1]]
 
-    # switch y and z axes with permutation matrix
-    permute = torch.tensor([[1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype=torch.float32)
-    rot_mat = torch.matmul(rot_mat, permute)
-    axis_angle_rot = matrix_to_axis_angle(rot_mat)
-    # axis_angle_rot[:, [0, 1, 2]] = axis_angle_rot[:, [0, 2, 1]]
+        # switch y and z axes with permutation matrix
+        permute = torch.tensor([[1, 0, 0], [0, 0, 1], [0, 1, 0]], dtype=torch.float32)
+        rot_mat = torch.matmul(rot_mat, permute)
+        axis_angle_rot = matrix_to_axis_angle(rot_mat)
+        axis_angle_rot = axis_angle_rot.detach().numpy()
+        hand_pose_vec = hand_pose[:, 6:]
+    elif rot_mode == "axisang":
+        axis_angle_rot = hand_pose[:, :3]
+        hand_pose_vec = hand_pose[:, 3:]
+    else:
+        raise NotImplementedError(f"Invalid rot_mode: {rot_mode}")
 
-    # concatenate hand pose and axis angle rotation, rotation should be first three values
-    # hand_pose = np.concatenate(
-    #     [axis_angle_rot.detach().numpy(), hand_pose[:, 6:]], axis=1
-    # )
-
-    return axis_angle_rot.detach().numpy(), hand_pose[:, 6:]
+    return axis_angle_rot, hand_pose_vec
 
 
 def generate_hand_joints(
@@ -89,6 +93,7 @@ def generate_hand_joints(
     lhand_poses: np.ndarray,
     rhand_poses: np.ndarray,
     hand_mode: str = "joints",
+    rot_mode: str = "cont_6d",
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Add PCA hands to the skeleton. Hand poses are 24 PCA pose parameters and 6D rotation.
@@ -106,8 +111,8 @@ def generate_hand_joints(
         rhand_poses: np.ndarray of shape (N, 30)
     """
     if hand_mode == "PCA":
-        lhand_global_orient, lhand_poses = extract_global_orient(lhand_poses)
-        rhand_global_orient, rhand_poses = extract_global_orient(rhand_poses)
+        lhand_global_orient, lhand_poses = extract_global_orient(lhand_poses, rot_mode)
+        rhand_global_orient, rhand_poses = extract_global_orient(rhand_poses, rot_mode)
 
         lhand_wrists = skeleton[:, 20, :]
         rhand_wrists = skeleton[:, 21, :]
@@ -126,11 +131,16 @@ def generate_hand_joints(
         lhand_joints = lhand_poses.unflatten(1, (21, 3)) + lhand_wrists[:, None, :]
         rhand_joints = rhand_poses.unflatten(1, (21, 3)) + rhand_wrists[:, None, :]
 
-        from sample.visualize_joints import SkeletonVisualizer
-
-        # vis = SkeletonVisualizer(lhand_joints)
+        # from sample.visualize_joints import SkeletonVisualizer
+        #
+        # normalized_rhand_joints = torch.zeros_like(rhand_joints)
+        # for i, val in enumerate(rhand_joints):
+        #     normalized_rhand_joints[i] = normalize_points(val)
+        #
+        # normalized_rhand_joints = np.array(normalized_rhand_joints)
+        # vis = SkeletonVisualizer(normalized_rhand_joints)
         # vis.animate()
-
+        #
     else:
         raise NotImplementedError(f"Invalid hand_mode: {hand_mode}")
 

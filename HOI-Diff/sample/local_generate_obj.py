@@ -32,9 +32,10 @@ from diffusion.gaussian_diffusion import LocalMotionDiffusion
 
 from sample.generate_hand_joints import generate_hand_joints
 
-HAND_MODE = "joints"
+HAND_MODE = "PCA"
+ROT_MODE = "axisang"
 if HAND_MODE == "PCA":
-    HAND_FEATURE_DIM = 30
+    HAND_FEATURE_DIM = 27
 elif HAND_MODE == "joints":
     HAND_FEATURE_DIM = 63
 
@@ -401,7 +402,7 @@ def main():
 
             # lhand_wrists and rhand_wrists are for debugging only
             lhand_joints, rhand_joints, lhand_wrists, rhand_wrists = (
-                generate_hand_joints(motion, motion_lhand, motion_rhand)
+                generate_hand_joints(motion, motion_lhand, motion_rhand, hand_mode=HAND_MODE, rot_mode=ROT_MODE)
             )
             plot_3d_motion(
                 animation_save_path,

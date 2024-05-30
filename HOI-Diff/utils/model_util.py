@@ -10,9 +10,9 @@ from diffusion.gaussian_diffusion import (
 )
 import torch
 
-HAND_MODE = "joints"
+HAND_MODE = "PCA"
 if HAND_MODE == "PCA":
-    HAND_FEATURE_DIM = 30
+    HAND_FEATURE_DIM = 27
 elif HAND_MODE == "joints":
     HAND_FEATURE_DIM = 63
 
