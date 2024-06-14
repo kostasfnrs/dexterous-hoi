@@ -8,9 +8,9 @@ import clip
 from model.mdm import MDM
 from model.mdm import *
 
-HAND_MODE = "joints"
+HAND_MODE = "PCA"
 if HAND_MODE == "PCA":
-    HAND_FEATURE_DIM = 30
+    HAND_FEATURE_DIM = 27
 elif HAND_MODE == "joints":
     HAND_FEATURE_DIM = 63
 
@@ -113,9 +113,9 @@ class HOIDiff(MDM):
             seqTransEncoderLayer_obj_pose, num_layers=2
         )
 
-        self.seqTransEncoder_obj_pose_end = nn.TransformerEncoder(
-            seqTransEncoderLayer_obj_pose, num_layers=2
-        )
+        # self.seqTransEncoder_obj_pose_end = nn.TransformerEncoder(
+        #     seqTransEncoderLayer_obj_pose, num_layers=2
+        # )
 
         self.seqTransEncoder_hands = nn.TransformerEncoder(
             seqTransEncoderLayer_hands, num_layers=2
@@ -216,10 +216,10 @@ class HOIDiff(MDM):
             output_human = self.seqTransEncoder_end(
                 torch.cat([human_mid[:1], dec_output_human], 0)
             )[1:]
-            # output_obj = dec_output_obj
-            output_obj = self.seqTransEncoder_obj_pose_end(
-                torch.cat([obj_mid[:1], dec_output_obj], 0)
-            )[1:]
+            output_obj = dec_output_obj
+            # output_obj = self.seqTransEncoder_obj_pose_end(
+            #     torch.cat([obj_mid[:1], dec_output_obj], 0)
+            # )[1:]
 
             output_hands = self.seqTransEncoder_hands_end(
                 torch.cat([hands_mid[:1], dec_output_hands], 0)

@@ -22,9 +22,9 @@ from data_loaders.behave.utils.paramUtil import *
 from utils.utils import recover_obj_points
 from data_loaders.behave.utils.plot_script import plot_3d_motion
 
-HAND_MODE = "joints"
+HAND_MODE = "PCA"
 if HAND_MODE == "PCA":
-    HAND_FEATURE_DIM = 30
+    HAND_FEATURE_DIM = 27
 elif HAND_MODE == "joints":
     HAND_FEATURE_DIM = 63
 
@@ -307,8 +307,12 @@ class TextOnlyDataset(data.Dataset):
     def inv_transform(self, data):
         data = data.clone()
         if data.shape[-1] == 269 + 2 * HAND_FEATURE_DIM:
-            assert len(self.mean) == 269 + 2 * HAND_FEATURE_DIM, f"Mean feature dim {len(self.mean)} is not matching"
-            assert len(self.std) == 269 + 2 * HAND_FEATURE_DIM, f"Std feature dim {len(self.std)} is not matching"
+            assert (
+                len(self.mean) == 269 + 2 * HAND_FEATURE_DIM
+            ), f"Mean feature dim {len(self.mean)} is not matching"
+            assert (
+                len(self.std) == 269 + 2 * HAND_FEATURE_DIM
+            ), f"Std feature dim {len(self.std)} is not matching"
             data = data * self.std + self.mean
         else:
             data[..., :263] = data[..., :263] * self.std[:263] + self.mean[:263]
@@ -667,14 +671,14 @@ class Behave(data.Dataset):
 
         elif self.training_stage == 2:
             if mode == "gt":
-                print('Loading ground truth mean and std')
+                print("Loading ground truth mean and std")
                 # used by T2M models (including evaluators)
                 self.mean = np.load(pjoin(opt.meta_dir, f"t2m_mean.npy"))
                 self.std = np.load(pjoin(opt.meta_dir, f"t2m_std.npy"))
 
             elif mode in ["train", "eval", "text_only"]:
                 # used by our models
-                print(f'Loading local mean and std from {opt.data_root}')
+                print(f"Loading local mean and std from {opt.data_root}")
                 self.mean = np.load(pjoin(opt.data_root, "Mean_local.npy"))
                 self.std = np.load(pjoin(opt.data_root, "Std_local.npy"))
                 print(f"Mean: {self.mean.shape}  Std: {self.std.shape}")
@@ -682,7 +686,7 @@ class Behave(data.Dataset):
             if mode == "eval":
                 # used by T2M models (including evaluators)
                 # this is to translate their norms to ours
-                print('Loading eval mean and std')
+                print("Loading eval mean and std")
 
                 self.mean_for_eval = np.load(pjoin(opt.meta_dir, f"t2m_mean.npy"))
                 self.std_for_eval = np.load(pjoin(opt.meta_dir, f"t2m_std.npy"))
