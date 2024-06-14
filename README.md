@@ -128,6 +128,16 @@ otion_length 10 --multi_backbone_split 4 --skip_first_stage
 
 This command will generate samples. You can view the visualized output in the model save directory.
 
+### Run evaluation
+
+To run the evaluation code:
+
+num_samples must be a multiplicate of 64!
+
+```bash
+python -m sample.eval_all --model_path ./save/<example_model_run>/model000100009.pt --num_samples 960 --num_repetitions 1 --motion_length 10 --multi_backbone_split 4 --skip_first_stage --output_dir ./save/eval
+```
+
 
 ### Results Visualization (without hands)
 
